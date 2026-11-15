@@ -99,7 +99,7 @@ export function About({ locale }: { locale: Locale }) {
             className="reveal relative mt-10 h-[15rem] overflow-hidden [clip-path:inset(0_round_1rem)] sm:h-[17rem] lg:col-span-1 lg:col-start-5 lg:row-span-2 lg:row-start-1 lg:mt-0 lg:h-auto"
           >
             <Image
-              src="/about-wallpaper.jpg"
+              src="https://cdn.playsunrise.net/site/about-wallpaper.jpg"
               alt={t.imageAlt}
               fill
               sizes="(min-width: 1024px) 39rem, 100vw"
