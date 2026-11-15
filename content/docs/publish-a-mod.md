@@ -1,9 +1,6 @@
 # Publish a mod
 
-Take your `.hmod` from your computer to other players. You can share the file or your mod's GitHub repository; a registry listing also needs a project page and an explicit version file.
-
-> [!NOTE]
-> Checked against the mod API at [arismoko/horizon `de8b4e2`](https://github.com/arismoko/horizon/tree/de8b4e2526df9d7f611515b78123a26a3914176f), which Sunrise merges. This page has no Rust snippets to compile. The sources describe registry formats and checks, but do not establish whether Sunrise's submission form is available.
+Take your `.hmod` from your computer to the mod registry, where players find it at [playsunrise.net/mods](/mods) and on the launcher's Mods page. A person reviews every project before it is published.
 
 ## Step 1: Get the file ready
 
@@ -14,43 +11,43 @@ Take your `.hmod` from your computer to other players. You can share the file or
    cargo horizon-mod build
    ```
 
-   This writes `target/horizon-mod/<id>.hmod`, for content and code mods alike. For a wasm project, use `cargo horizon-mod build --wasm` to compile `mod.wasm` and package it. A native package carries source; Sunrise's launcher compiles it against the pinned prebuilt game.
+   This writes `target/horizon-mod/<id>.hmod`, whatever the mod holds. Add `--wasm` for a sandboxed build.
 
-3. **Give the shared file a clear name**, such as `ruby-1.0.0.hmod`. Its manifest still supplies the mod's id and version; renaming the file does not change them.
+3. **Rename it** to `<id>-<version>.hmod`, such as `ruby-1.0.0.hmod`. The form reads the id and version from the name.
 4. **Check it:**
 
    ```sh
    cargo horizon-mod check ruby-1.0.0.hmod
    ```
 
-   It must pass. This checks the package without running the mod's code; it does not replace trying the mod in the game. See [Test a mod](/docs/test-a-mod#check-1-the-file).
+   It must pass. See [Test a mod](/docs/test-a-mod#check-1-the-file).
 
-5. **Publish the source.** A registry entry requires an HTTPS source address and an [SPDX](https://spdx.org/licenses/) licence expression, such as `MIT`, `Apache-2.0` or `GPL-3.0-only`. Keep the source for each published file available for review.
+5. **Publish the source.** Put it in a public repository, under a licence players may use: MIT, Apache-2.0, GPL and so on, as an [SPDX](https://spdx.org/licenses/) name. Reviewers read it, and the file must be built from it.
 
 > [!TIP] Shader packs
-> A shader pack in Sunrise's own format is packed with `horizon-shader pack <folder>`, which writes `<id>-<version>.hshader` ([the format](/docs/api/shaders)). It has its own checks; passing the pack command does not by itself establish registry acceptance.
+> A shader pack in Sunrise's own format is packed with `horizon-shader pack <folder>`, which writes `<id>-<version>.hshader` ([the format](/docs/api/shaders)). The rest of this page is the same.
 
 ## What the registry accepts today
 
-- **A mod with data only:** the registry format supports content `.hmod` files.
-- **A mod with Rust code:** native and wasm mods also use `.hmod`, with one `horizon-mod.toml`. There is no separate code-mod bundle format to choose.
+- **A mod with data only:** yes, through the form below.
+- **A mod with Rust code:** not through the form yet. Its code-mod kind is still the old `.hnmod` bundle, which Sunrise doesn't load ([older mod systems](/docs/what-changed)).
 
-The format alone does not tell you what Sunrise's form currently accepts. To share a code mod without it, publish the `.hmod` as a release of your own repository. State the native mod's pinned game build and which builds you tried. Sunrise's launcher can also install native source through **Add from GitHub**; see [Install from GitHub](/docs/modding/how-to/native-mods/install-from-github).
+Until the form takes a `.hmod` with code, publish a code mod as a release of your own GitHub repository, and say in its README which game build it pins. Players install a native mod from there with **Add from GitHub** ([Install from GitHub](/docs/modding/how-to/native-mods/install-from-github)).
 
 ## Step 2: Sign it (optional, recommended)
 
-A signature lets a reader check a file against your public key. Once a registry project has a key, its versions must be signed with that key; an unsigned file or a signature from another key is refused.
+A signature proves a file is yours. Once your project has a public key, every later version must be signed with it, so nobody else can publish an update in your name, even with your GitHub account.
 
-The registry uses [minisign](https://jedisct1.github.io/minisign/) signatures.
+Sunrise uses [minisign](https://jedisct1.github.io/minisign/).
 
-1. **Install minisign** using its installation instructions.
+1. **Install minisign:** `brew install minisign` on macOS, `scoop install minisign` on Windows, or your Linux distribution's package.
 2. **Make a key pair, once:**
 
    ```sh
    minisign -G -p horizon-mods.pub -s horizon-mods.key
    ```
 
-   Use the public key from `horizon-mods.pub`, not the secret key.
+   Your public key is the last line of `horizon-mods.pub`. It starts with `RW`.
 
 3. **Sign each file you publish, and check it:**
 
@@ -62,35 +59,35 @@ The registry uses [minisign](https://jedisct1.github.io/minisign/) signatures.
    The report then says "signature verified".
 
 > [!WARNING] Keep the secret key safe
-> Keep `horizon-mods.key` and its password private and backed up. If you lose it, contact the registry's maintainers before publishing another version; changing the project's key affects verification of its existing files.
+> Keep `horizon-mods.key` and its password private and backed up. If you lose it, the project's key can only be changed by hand, through the registry's maintainers.
 
 ## Step 3: Fill in the form
 
-If Sunrise offers a submission form, prepare the project page and version file for it. The registry format requires:
+Open [playsunrise.net/mods/submit](/mods/submit) and sign in with GitHub. The page reads only your public profile.
 
-- **The file:** its kind, id and version, an HTTPS download URL, size and SHA-256. A mod's metadata must match its manifest.
-- **Its page:** the name, a summary of at most 160 characters, a Markdown description of 50–10,000 characters after trimming, authors, licence and source address. A listed project also needs 1–3 categories and a square PNG icon, 64–1024 pixels and at most 256 KiB.
-- **Signature:** the project's public key, if signing, and the file's `.minisig` text.
+- **The file:** the kind (mod or shader pack), the file, its id and version, the Minecraft version (26.3) and what changed.
+- **Its page:** the name, a one-line summary, a description in Markdown, the authors, the licence, the source address, 1 to 3 categories and, for a new project, a square PNG icon of 64 to 1024 pixels and at most 256 KiB.
+- **Signature:** your public key, for a new project, and the file's `.minisig`.
 
-Submit explicit version files, not an entry that follows a repository's future releases. See [Publishing your mod](/docs/modding/how-to/publish) for the publishing workflow and [the registry index](/docs/modding/reference/registry-index) for the fields.
+Press **Submit for review**. It checks the file again and opens a pull request in [sunrise-org/horizon-mods](https://github.com/sunrise-org/horizon-mods) that adds `mods/<id>.toml`, with you as the project's owner. The repository's checks run `cargo horizon-mod check` again and post the report.
 
 ## Step 4: Review
 
-- Make the pull request, source and package-check report available to reviewers.
-- Answer review questions on the pull request.
-- If the published file must change, publish a new version rather than replacing it.
-- Say what the mod does and what permissions it needs. Native code runs with the player's rights; wasm code runs in the game's sandbox.
+- A reviewer reads the pull request, your source and the report.
+- Questions come as comments on the pull request. Answer them there.
+- If the file must change, submit a new version from the form.
+- Code is read line by line, since it runs with the player's rights. Say in the description what the mod does and what it doesn't.
 
-A registry listing pins the download by SHA-256. The launcher checks the downloaded file against that hash, its metadata and any required signature before installation.
+When the pull request is merged, the file becomes a release of horizon-mods within minutes. Your project gets a page at `playsunrise.net/mods/<id>` with its source, licence and SHA-256, and shows in the launcher.
 
 ## Updates
 
-- Submit a new version file for each update.
-- Keep the published files unchanged. The registry's review checks reject changing an existing version's file or SHA-256.
-- If the project has a key, sign the new file with it.
+- Use the same form with a new version.
+- An update that changes only the version file merges once its checks pass. A change to the project's page waits for review.
+- If the project has a key, the new file must be signed with it.
 
-The registry's file formats are in [the mod index reference](/docs/api/mod-index). Acceptance and review policy are the registry maintainers' decision, not a guarantee made by the package format.
+Without the form, you can open the pull request by hand: the [horizon-mods README](https://github.com/sunrise-org/horizon-mods) says how. The registry's file formats are in [the mod index reference](/docs/api/mod-index).
 
 ## Reports and takedowns
 
-Report harmful projects to the registry's maintainers. The registry records takedowns in `revoked.toml`: it can revoke a file by SHA-256 or every version of a project by id. The launcher refuses revoked files and turns installed copies off with the reason.
+Anyone can report a project from its page, with **Report it**. A project that does harm is taken down: the launcher then refuses its files and turns installed copies off, telling players why.

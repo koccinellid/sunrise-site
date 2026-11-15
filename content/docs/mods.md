@@ -2,9 +2,6 @@
 
 Sunrise has its own mods, made for Sunrise. Java mods don't run, but their data can carry over, and data packs work in part. This page says what you can use today and how.
 
-> [!NOTE] API version
-> This page was checked against the mod API at [arismoko/horizon `de8b4e2`](https://github.com/arismoko/horizon/tree/de8b4e2526df9d7f611515b78123a26a3914176f), which Sunrise merges. It contains no Rust snippets to compile.
-
 ## Sunrise mods
 
 A Sunrise mod is **one `.hmod` file**, with one `horizon-mod.toml`. What it can do depends on what is inside:
@@ -13,7 +10,7 @@ A Sunrise mod is **one `.hmod` file**, with one `horizon-mod.toml`. What it can 
 - **Native Rust code as well:** a HUD, keys, commands, settings, new behaviour. The launcher compiles the mod's Rust source against the pinned prebuilt game on your computer; it does not rebuild the game.
 - **WebAssembly code:** `mod.wasm`, loaded into the game's sandbox. API-only Rust mods can build for native or wasm, using the same hooks and Parts. Game-code changes through `[native]` sub-tables are native only.
 
-Reviewed mods are listed on the launcher's Mods page.
+Reviewed mods are listed at [playsunrise.net/mods](/mods) and on the launcher's Mods page.
 
 ### Install a mod
 
@@ -78,12 +75,12 @@ The Mods page lists Fabric, NeoForge and Forge mods made for 26.3. Before offeri
 
 A world's data packs go in its `datapacks` folder, as folders or `.zip` files with a `pack.mcmeta`, as in vanilla.
 
-**Supported in single player and server worlds:**
+**Works today, in single player and open-to-LAN worlds:**
 
 - **Functions** (`.mcfunction`, with macros and line continuation) and **function tags**, such as `minecraft:load` and `minecraft:tick`.
 - **Predicates** and **item modifiers**.
-- **Recipes, loot tables, advancements and tags** read from the world's enabled packs over the prepared data and mods. Reloadable content refreshes on `/reload`.
-- **World-generation overrides** from enabled packs, within the generator's supported types. Unsupported entries are logged; this does not mean every world-generation pack works.
 - The `/function`, `/datapack` and `/reload` commands, and the choice of which packs are on, kept with the world.
 
-Sunrise starts with prepared vanilla data. Enabled data packs can override it; the vanilla pack itself can be disabled with `/datapack`. Check a pack's contents rather than assuming that all vanilla or modded pack features work.
+**Not applied from data packs yet:** custom recipes, loot tables, advancements and world generation. Sunrise reads those from the vanilla data it prepared, and from mods.
+
+Vanilla's own data is always on, and it matches vanilla: commands run as vanilla's do, and recipes, loot and world generation are checked against the real game.

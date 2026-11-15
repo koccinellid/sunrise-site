@@ -2,9 +2,6 @@
 
 The main fields of `horizon-mod.toml`, and what goes into the `.hmod`. The book's [Mod files](/docs/modding/reference/manifest) reference has the complete rules.
 
-> [!NOTE]
-> Checked against the mod API at [arismoko/horizon `de8b4e2`](https://github.com/arismoko/horizon/tree/de8b4e2526df9d7f611515b78123a26a3914176f), which Sunrise merges. This page has no Rust snippets to compile; its TOML examples were checked against the manifest schema, not run through the tools.
-
 ## One manifest per mod
 
 - **Where:** `horizon-mod.toml`, at the root of the mod's folder.

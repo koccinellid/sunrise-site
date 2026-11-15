@@ -2,9 +2,6 @@
 
 Three checks, in order: the file checker, your own unit tests, then the game. Each one catches a different kind of mistake.
 
-> [!NOTE] API check
-> This page was checked against the mod API at [arismoko/horizon `de8b4e2`](https://github.com/arismoko/horizon/tree/de8b4e2526df9d7f611515b78123a26a3914176f), which Sunrise merges. There are no Rust snippets to compile here; the shell commands were checked against the source, not run.
-
 ## Check 1: the file
 
 Pack the mod and read it the way the mod registry will:
@@ -83,7 +80,7 @@ Then play that instance and trigger each hook and Part you wrote.
 
 ### The same code in the sandbox
 
-For API-only code, build with `cargo horizon-mod build --wasm` and test the resulting `target/horizon-mod/<id>.hmod` on its own. It uses the same API source, but crosses the shared-memory Wire boundary. A wasm mod has no `[native]` table: engine-code changes through `[[native.mixin]]`, `[[native.bridge]]`, `[[native.module]]` or `[[native.loop]]` are native only. See [WebAssembly mods](/docs/modding/how-to/wasm-mods).
+For API-only code, build with `cargo horizon-mod build --wasm` and test the resulting `target/horizon-mod/<id>.hmod` on its own. It is the same source, but it crosses a sandbox boundary the native build doesn't have. A wasm mod has no `[native]` table: engine-code changes through `[[native.mixin]]`, `[[native.bridge]]`, `[[native.module]]` or `[[native.loop]]` are native only. See [WebAssembly mods](/docs/modding/how-to/wasm-mods).
 
 ## On a dedicated server
 

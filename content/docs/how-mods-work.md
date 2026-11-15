@@ -2,9 +2,6 @@
 
 The few ideas behind every Sunrise mod: one file, ids and namespaces, registries, and when each part of a mod runs. Read this once and the rest of the guides make sense.
 
-> [!NOTE]
-> Checked against the mod API at [arismoko/horizon `de8b4e2`](https://github.com/arismoko/horizon/tree/de8b4e2526df9d7f611515b78123a26a3914176f), which Sunrise merges. This page has no Rust snippets to compile.
-
 ## A mod is one folder, then one file
 
 While you work, your mod is a **folder**. When you share it, it is one **`.hmod` file**: a zip containing the mod's manifest, content and code, not your build cache.
@@ -77,10 +74,10 @@ and the file says what the block copies from vanilla:
 capabilities = ["registries"]
 ```
 
-This is the required capability list for the shared mod manifest.
+Every mod's manifest has exactly this list.
 
 > [!TIP] "Registry" has a second meaning
-> The **mod registry** is something else: the index of published mod packages that the launcher reads. When these pages say "the registry checks your file", they mean that one.
+> The **mod registry** is something else: the list of published mods at [playsunrise.net/mods](/mods), which the launcher installs from. When these pages say "the registry checks your file", they mean that one.
 
 ## Where each file goes
 
@@ -109,7 +106,7 @@ These recipes, loot tables, tags and assets use vanilla's data pack and resource
 
 - **Data and assets** load when the game starts. After you change a file, rebuild the package and start the game again.
 - **Native Rust code** is compiled by Sunrise's launcher against the pinned prebuilt game, after a trust notice. The game itself is not rebuilt. Native code can do anything you can on your computer.
-- **Rust written against the mod API and built to `mod.wasm`** runs in the game's sandbox instead, using the shared-memory Wire layout, with no rebuild of the game. Game-code changes through `[[native.mixin]]`, `[[native.bridge]]`, `[[native.module]]` and `[[native.loop]]` are native only.
+- **Rust written against the mod API and built to `mod.wasm`** runs in the game's sandbox instead, with no rebuild of the game. Game-code changes through `[[native.mixin]]`, `[[native.bridge]]`, `[[native.module]]` and `[[native.loop]]` are native only.
 
 ## Next
 

@@ -22,7 +22,7 @@ Every recipe starts with one of these:
 - **Not yet:** the game can't do it. The recipe says what is missing and shows the closest thing that works, marked **Workaround**.
 
 > [!NOTE] Checked against one commit
-> This page was checked against the mod API at [arismoko/horizon `de8b4e2`](https://github.com/arismoko/horizon/tree/de8b4e2526df9d7f611515b78123a26a3914176f), which Sunrise merges. This index has no Rust snippets to compile; no snippets were compiled for this page. If the compiler disagrees after you update, `cargo doc -p horizon-mod-api --open` shows the current API.
+> These recipes were checked against the mod API at [arismoko/horizon `de8b4e2`](https://github.com/arismoko/horizon/tree/de8b4e2526df9d7f611515b78123a26a3914176f), which Sunrise merges: every type, hook, field and file path. Each page's note says which of its Rust snippets were compiled against `horizon-mod-api`; none were run in the game. If the compiler disagrees after you update, `cargo doc -p horizon-mod-api --open` shows the current API.
 
 ## The recipes
 

@@ -2,9 +2,6 @@
 
 Give a mod behaviour with Rust: a hook that greets each player who joins. The code sits in the same folder as your blocks and items, and ships in the same `.hmod` with one `horizon-mod.toml`.
 
-> [!NOTE] API check
-> This page was checked against the mod API at [arismoko/horizon `de8b4e2`](https://github.com/arismoko/horizon/tree/de8b4e2526df9d7f611515b78123a26a3914176f), which Sunrise merges. The greeting Rust snippet was compile-checked against `horizon-mod-api`; the launcher and in-game steps were not run.
-
 ## What you will make
 
 A mod that, when a player joins, says in chat:

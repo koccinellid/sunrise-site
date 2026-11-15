@@ -127,6 +127,3 @@ cargo horizon-mod use-jar /path/to/original-mod.jar
 - It adds a `[[jar]]` table to the manifest, with the jar's id, version and SHA-512.
 - The jar stays outside the `.hmod`. Only its `assets/` and `data/` are read: no Java code runs.
 - Details: [Java jars as external assets](/docs/modding/how-to/content-mods#java-jars-as-external-assets).
-
-> [!NOTE] Checked API
-> Checked against the mod API at [arismoko/horizon `de8b4e2`](https://github.com/arismoko/horizon/tree/de8b4e2526df9d7f611515b78123a26a3914176f), which Sunrise merges. This page has no Rust snippets; none were compiled.

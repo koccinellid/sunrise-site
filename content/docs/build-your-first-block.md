@@ -2,9 +2,6 @@
 
 Make Glowing Amethyst: a block that gives light, can be crafted, and drops itself when mined with a pickaxe. Then add an item of your own. No code, only small JSON files, each explained.
 
-> [!NOTE] API checked
-> Checked against the mod API at [arismoko/horizon `de8b4e2`](https://github.com/arismoko/horizon/tree/de8b4e2526df9d7f611515b78123a26a3914176f), which Sunrise merges. This page has no Rust snippets to compile; the JSON and commands were checked against the source, not run in the game.
-
 ## Before you start
 
 - You have done the [quickstart](/docs/make-a-mod): Rust and `cargo horizon-mod` are installed.

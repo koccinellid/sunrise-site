@@ -5,9 +5,6 @@ Java mod jars do not run in Sunrise. Instead, the launcher reads a modpack, tell
 > [!NOTE]
 > Importing a pack does not mean every mod works. What carries over automatically is supported data and assets: blocks, items, recipes, loot tables, tags, models, textures and structures. The mods' Java code does not run.
 
-> [!NOTE]
-> Checked against the mod API at [arismoko/horizon `de8b4e2`](https://github.com/arismoko/horizon/tree/de8b4e2526df9d7f611515b78123a26a3914176f), which Sunrise merges. This page has no Rust snippets to compile.
-
 ## What the Modpacks page does
 
 Open **Mods** in the launcher, then its **Modpacks** tab.

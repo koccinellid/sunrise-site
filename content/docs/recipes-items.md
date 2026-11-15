@@ -271,4 +271,4 @@ Use `Text::translate("tooltip.my_mod.wand", vec![])` and a line in `en_us.json` 
 - More gaps: [API gaps: items](/api-gaps#items).
 
 > [!NOTE]
-> Checked against the mod API at [arismoko/horizon `de8b4e2`](https://github.com/arismoko/horizon/tree/de8b4e2526df9d7f611515b78123a26a3914176f), which Sunrise merges. The wand and tooltip Rust snippets were checked against the source, but not compiled: the attempted check was stopped while waiting for the shared build lock. These recipes were not tried in game.
+> Checked against the mod API at [arismoko/horizon `de8b4e2`](https://github.com/arismoko/horizon/tree/de8b4e2526df9d7f611515b78123a26a3914176f), which Sunrise merges. The wand and its tooltip method were compile-checked together against `horizon-mod-api`. These recipes were not tried in the game.

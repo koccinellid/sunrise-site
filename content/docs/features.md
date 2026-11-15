@@ -43,9 +43,6 @@ This is the biggest change Sunrise brings. It is Sunrise's mod API.
 
 [How a mod works](/docs/how-mods-work) explains the new system. Have an older mod? [Older systems do not apply](/docs/what-changed).
 
-> [!NOTE]
-> This section was checked against the mod API at [arismoko/horizon `de8b4e2`](https://github.com/arismoko/horizon/tree/de8b4e2526df9d7f611515b78123a26a3914176f), which Sunrise merges. There are no Rust snippets on this page to compile.
-
 ## What Sunrise is not
 
 - **Not Minecraft itself.** It contains no Minecraft code, assets or data, and never downloads them. You need your own copy of Minecraft: Java Edition 26.3.
