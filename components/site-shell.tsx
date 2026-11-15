@@ -1,7 +1,7 @@
 import { Geist, Geist_Mono, Sora } from "next/font/google";
 import { Suspense } from "react";
 import type { ReactNode } from "react";
-import { getReleases, launcherBuild } from "@/components/github-releases";
+import { getLauncherRelease, getReleases, launcherBuild } from "@/components/github-releases";
 import { DawnBackdrop } from "@/components/dawn-backdrop";
 import { getMessages, type Locale } from "@/components/i18n";
 import { PointerGlow } from "@/components/pointer-glow";
@@ -47,6 +47,6 @@ export function SiteShell({ locale, children }: { locale: Locale; children: Reac
 }
 
 async function SiteNavigation({ locale }: { locale: Locale }) {
-  const releases = await getReleases();
-  return <SiteHeader locale={locale} t={getMessages(locale).header} releaseIds={releases?.map((release) => release.id) ?? []} launcher={launcherBuild(releases)} />;
+  const [releases, launcher] = await Promise.all([getReleases(), getLauncherRelease()]);
+  return <SiteHeader locale={locale} t={getMessages(locale).header} releaseIds={releases?.map((release) => release.id) ?? []} launcher={launcherBuild(launcher)} />;
 }

@@ -5,10 +5,10 @@ export const MOD_API_REPO = "arismoko/horizon";
 export const MOD_API_REPO_URL = `https://github.com/${MOD_API_REPO}`;
 export const MOD_API_AUTHOR_URL = "https://github.com/arismoko";
 export const PROFILER_HELPER_URL = "https://github.com/dontstopgorkingit";
-export const DOWNLOAD_URL = "/docs/install";
+export const DOWNLOAD_URL = "/download";
 export const GITHUB_URL = GAME_URL;
-export const WINDOWS_URL = "/docs/install#download-the-launcher";
-export const LINUX_URL = "/docs/install#download-the-launcher";
+export const WINDOWS_URL = "/download#windows";
+export const LINUX_URL = "/download#linux";
 export const CONTRIBUTORS_URL = "#contributors";
 // The Sunrise Discord invite; while it is empty every Discord link and button is hidden.
 export const DISCORD_URL = "https://discord.gg/eswQcHfRKC";

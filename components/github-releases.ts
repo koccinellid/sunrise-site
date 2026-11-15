@@ -3,6 +3,12 @@ import { TAGS } from "@/components/github-fresh";
 import { GAME_REPO } from "@/components/game-repo";
 import { githubFetch } from "@/components/github-api";
 import { GITHUB_URL } from "@/components/links";
+import { newestLauncher, type LauncherRelease } from "@/components/launcher-release";
+
+export { LAUNCHER_FILES, type LauncherFile, type LauncherRelease } from "@/components/launcher-release";
+// "none": GitHub answered and no launcher release has Sunrise's files yet; null: GitHub couldn't be read.
+export type LauncherLookup = LauncherRelease | "none" | null;
+const LAUNCHER_PAGES = 3;
 
 const REPO = GAME_REPO;
 
@@ -77,30 +83,44 @@ export type DesktopOs = "windows" | "macos" | "linux";
 export type LauncherTarget = DesktopOs | "macos-x64" | "windows-arm64";
 export type LauncherBuild = { version: string; files: Partial<Record<LauncherTarget, { url: string; size: number }>> };
 
-// Windows gets the per-user setup: it installs into %LOCALAPPDATA%, where the launcher can update itself (a copy run
-// from inside a ZIP or a protected folder can't, horizon#9287).
-const LAUNCHER_FILES: Record<LauncherTarget, RegExp> = {
-  windows: /^horizon-launcher-setup\.exe$/i,
-  "windows-arm64": /^horizon-launcher-setup-arm64\.exe$/i,
-  macos: /macos-arm64\.dmg$/i,
-  "macos-x64": /macos-x64\.dmg$/i,
-  linux: /linux-x86_64\.tar\.gz$/i,
-};
-
-export function launcherBuild(releases: Release[] | null): LauncherBuild | null {
-  const release = releases?.find((r) => r.kind === "launcher");
-  if (!release) return null;
-  const files: LauncherBuild["files"] = {};
-  for (const os of Object.keys(LAUNCHER_FILES) as LauncherTarget[]) {
-    const asset = release.assets.find((a) => LAUNCHER_FILES[os].test(a.name));
-    if (asset) files[os] = { url: asset.url, size: asset.size };
+// The newest launcher (components/launcher-release.ts) among the repository's newest releases.
+export async function getLauncherRelease(): Promise<LauncherLookup> {
+  "use cache";
+  cacheTag(TAGS.releases);
+  const releases: GitHubRelease[] = [];
+  try {
+    for (let page = 1; page <= LAUNCHER_PAGES; page++) {
+      const res = await githubFetch(`/repos/${REPO}/releases?per_page=100&page=${page}`);
+      if (!res.ok) throw new Error(`GitHub responded ${res.status} ${res.statusText}`);
+      const batch: GitHubRelease[] = await res.json();
+      releases.push(...batch);
+      if (batch.length < 100) break;
+    }
+  } catch (error) {
+    console.error(`Couldn't find the newest launcher release of ${REPO}:`, error);
+    cacheLife("minutes");
+    return null;
   }
-  return { version: release.tag.replace(/^launcher@/, ""), files };
+  cacheLife({ stale: 300, revalidate: 900, expire: 86400 });
+  return newestLauncher(releases) ?? "none";
+}
+
+// The download buttons' builds. Windows gets the per-user setup: it installs into %LOCALAPPDATA%, where the launcher
+// can update itself (a copy run from inside a ZIP or a protected folder can't, horizon#9287). Linux gets the AppImage,
+// one file to run, or the archive when a release has no AppImage.
+export function launcherBuild(launcher: LauncherLookup): LauncherBuild | null {
+  if (!launcher || launcher === "none") return null;
+  const { windowsSetup, linuxAppImage, linuxTar, macosDmg } = launcher.files;
+  const files: LauncherBuild["files"] = {};
+  for (const [target, asset] of [["windows", windowsSetup], ["linux", linuxAppImage ?? linuxTar], ["macos", macosDmg]] as const) {
+    if (asset) files[target] = { url: asset.url, size: asset.size };
+  }
+  return { version: launcher.version, files };
 }
 
 // The launcher's files, as published on every release (its own launcher@ releases, and the game releases that carried
 // it before them); not the game's files, SHA256SUMS or signatures.
-const LAUNCHER_ASSET = /^horizon-launcher-((windows|linux|macos)-[\w.-]+\.(zip|tar\.gz|dmg|AppImage)|setup(-arm64)?\.exe)$/;
+const LAUNCHER_ASSET = /^(horizon|sunrise)-launcher-((windows|linux|macos)-[\w.-]+\.(zip|tar\.gz|dmg|AppImage)|setup(-arm64)?\.exe)$/;
 const MAX_RELEASE_PAGES = 10;
 
 // The launcher's downloads over all releases (GitHub's download counts, so self-updates count too), or null when

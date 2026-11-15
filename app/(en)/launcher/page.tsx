@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { getReleases, launcherBuild, type Release } from "@/components/github-releases";
+import { getLauncherRelease, getReleases, launcherBuild, type Release } from "@/components/github-releases";
 import { LauncherApp } from "@/components/launcher/launcher-app";
 import { FALLBACK, type Change, type LauncherData, type ModEntry, type Nightly, type Note } from "@/components/launcher/launcher-data";
 import { getMods } from "@/components/mods-data";
@@ -87,13 +87,13 @@ function modsFrom(projects: ModProject[]): ModEntry[] {
 }
 
 export default async function LauncherPage() {
-  const [releases, projects] = await Promise.all([getReleases(), getMods()]);
+  const [releases, projects, launcher] = await Promise.all([getReleases(), getMods(), getLauncherRelease()]);
   const nightlies = releases ? nightliesFrom(releases) : [];
   const notes = releases ? notesFrom(releases) : [];
   const mods = projects ? modsFrom(projects) : [];
   const launchers = releases?.filter((r) => r.kind === "launcher") ?? [];
   const data: LauncherData = {
-    launcherVersion: launcherBuild(releases)?.version ?? FALLBACK.launcherVersion,
+    launcherVersion: launcherBuild(launcher)?.version ?? FALLBACK.launcherVersion,
     currentLauncher: launchers.length > 1 ? launchers[Math.min(6, launchers.length - 1)].tag.replace(/^launcher@/, "") : FALLBACK.currentLauncher,
     nightlies: nightlies.length ? nightlies : FALLBACK.nightlies,
     notes: notes.length ? notes : FALLBACK.notes,
