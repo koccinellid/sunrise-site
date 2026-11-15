@@ -76,7 +76,11 @@ It answers with a long line that starts with `error: usage: cargo horizon-mod ne
    cargo horizon-mod new my_first_mod --name "My First Mod"
    ```
 
-3. The tool confirms that it created `my_first_mod` with the mod id `my_first_mod`, then tells you to build it and copy the package into your game folder's `horizon-mods/` folder.
+3. The tool answers:
+
+   ```text
+   Created my_first_mod (mod id my_first_mod). Next: cd my_first_mod && cargo horizon-mod build, then copy target/horizon-mod/my_first_mod.hmod into your game folder's horizon-mods/ (docs/modding/src/start/first-content-mod.md)
+   ```
 
 You now have a folder `my_first_mod` with a manifest and one example block, Glowing Amethyst.
 
@@ -124,4 +128,4 @@ Run them inside your mod's folder.
 - `cargo horizon-mod update` repins a native mod to the current Nightly build. Use `--horizon <build>` to select a build.
 
 > [!NOTE] Which build these guides follow
-> These guides were checked against the mod API at [arismoko/horizon `de8b4e2`](https://github.com/arismoko/horizon/tree/de8b4e2526df9d7f611515b78123a26a3914176f), which Sunrise merges. This page's templates and commands were compared with that source; the commands were not run. There are no Rust snippets on this page to compile.
+> These guides were checked against the mod API at [arismoko/horizon `de8b4e2`](https://github.com/arismoko/horizon/tree/de8b4e2526df9d7f611515b78123a26a3914176f), which Sunrise merges. The templates and commands on these pages were compared with that source but not run; the Rust greeting in [Add code to your mod](/docs/mod-code) was compile-checked against `horizon-mod-api`.

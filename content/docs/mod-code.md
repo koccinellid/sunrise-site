@@ -15,7 +15,7 @@ On the way you meet five ideas code mods use: **hooks, events, the host, handles
 ## Before you start
 
 - You have done the [quickstart](/docs/make-a-mod): Rust and `cargo horizon-mod` are installed. The tool installs with `cargo install --locked --git https://github.com/sunrise-org/sunrise cargo-horizon-mod`.
-- You have **Sunrise's launcher**, built from [Sunrise's repository](https://github.com/sunrise-org/sunrise): it compiles your code against the pinned prebuilt game. The book's [Installing and using mods](/docs/modding/start/installing) shows how to get it and prepare a game.
+- You have **Sunrise's launcher** ([Install Sunrise](/docs/install)): it compiles your code against the pinned prebuilt game. The book's [Installing and using mods](/docs/modding/start/installing) shows how to get it and prepare a game.
 - You know a little Rust. If not, [the Rust book](https://doc.rust-lang.org/book/)'s first chapters are enough.
 
 ## Step 1: Make the project
@@ -58,14 +58,14 @@ capabilities = ["registries"]
 
 [native]
 game = "26.3"
-horizon = "de8b4e2526df9d7f611515b78123a26a3914176f"
-mixins = "e59da9094f0c2fdda6c627fe9eff22dec6a906f0"
+horizon = "<40-character game commit>"
+mixins = "<40-character horizon-mixins commit>"
 ```
 
 - The top is the same as for a mod with only data.
 - `[native]` selects native code and pins its build.
 - `horizon` pins the game build; `mixins` pins the horizon-mixins tool. The launcher compiles against the prebuilt game, never rebuilding the game for a mod.
-- These are illustrative pins for the API checked here. The tool uses the current Nightly by default, so keep the pins it writes for your project.
+- The tool pins the current Nightly by default (or `--horizon <build>`). Keep the pins it writes.
 
 The mod's id and version come from this file only, never from `Cargo.toml`.
 
@@ -214,7 +214,7 @@ A mod may depend on crates from crates.io. Each registry package needs an exact 
 cargo horizon-mod build --wasm
 ```
 
-builds the same crate to `mod.wasm`, records `[wasm]` in the manifest and packs it with its source. A package carries native or wasm code, not both; the wasm package has no `[native]` table. The game checks API layouts and the wasm toolchain before running it in its sandbox, using the shared-memory Wire layout. Supported hooks and Parts use the same typed API; APIs marked `Not on wasm` are unavailable. See [Building a mod to mod.wasm](/docs/modding/how-to/wasm-mods).
+builds the same crate to `mod.wasm`, records `[wasm]` in the manifest and packs it with its source. A package carries native or wasm code, not both; the wasm package has no `[native]` table. The game checks API layouts and the wasm toolchain before running it in its sandbox. Supported hooks and Parts use the same typed API; APIs marked `Not on wasm` are unavailable. See [Building a mod to mod.wasm](/docs/modding/how-to/wasm-mods).
 
 ## Keep it building
 
