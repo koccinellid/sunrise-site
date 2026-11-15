@@ -77,7 +77,16 @@ const EDITS = {
   ],
 };
 
+// Sunrise's builds, SDK releases and tool come from its own repository (PREBUILT_REPO and the launcher's REPO there).
+const GAME = "https://github.com/sunrise-org/sunrise";
+const EVERYWHERE = [
+  [/--git https:\/\/github\.com\/arismoko\/horizon cargo-horizon-mod/g, `--git ${GAME} cargo-horizon-mod`],
+  [/https:\/\/github\.com\/arismoko\/horizon\/releases\/download\/sdk-/g, `${GAME}/releases/download/sdk-`],
+  [/at your `horizon` commit on \[GitHub\]\(https:\/\/github\.com\/arismoko\/horizon\)/g, `at your \`horizon\` commit on [GitHub](${GAME})`],
+];
+
 function edit(file, text) {
+  for (const [from, to] of EVERYWHERE) text = text.replace(from, to);
   for (const [from, to] of EDITS[file] ?? []) {
     if (typeof from === "string" ? !text.includes(from) : !from.test(text)) throw new Error(`${file}: the edit for ${from} matches nothing`);
     text = text.replace(from, to);

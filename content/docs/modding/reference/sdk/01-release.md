@@ -1,7 +1,7 @@
 # The release
 
 Every SDK is the release `sdk-<build id>` of this repository, at
-`https://github.com/arismoko/horizon/releases/download/sdk-<build id>/<file>`. Its files:
+`https://github.com/sunrise-org/sunrise/releases/download/sdk-<build id>/<file>`. Its files:
 
 This table is generated when the book is built: see it in [the published book](https://arismoko.github.io/horizon/reference/sdk/01-release.html).
 
