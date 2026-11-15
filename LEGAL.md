@@ -6,13 +6,13 @@ copies this file to `/LEGAL.md` on the site.
 Sunrise is not an official Minecraft product. It is not approved by or associated with
 Mojang or Microsoft. Minecraft is a trademark of Mojang Synergies AB.
 
-Sunrise is a community fork of Horizon, and this site comes from Horizon's. Where this file says "Horizon", the asset or text is Horizon's own work, used under its MIT licence.
+Sunrise is a community fork of Horizon, and this site comes from Horizon's. The site's code is under the PolyForm Shield License 1.0.0 ([LICENSE](LICENSE)); what came from Horizon's site keeps Horizon's MIT licence ([LICENSES/MIT-Horizon.txt](LICENSES/MIT-Horizon.txt)). Where this file says "Horizon", the asset or text is Horizon's own work, used under its MIT licence.
 
 ## Code
 
 | File | Source | Licence |
 | --- | --- | --- |
-| `src/*.html`, `src/*.css`, `src/*.js`, `build.mjs`, `serve.mjs`, `scripts/*`, `Caddyfile`, `Dockerfile` | Written for this site | MIT, as the rest of Horizon ([LICENSE](https://github.com/sunrise-org/horizon/blob/release/sunrise/LICENSE)) |
+| `src/*.html`, `src/*.css`, `src/*.js`, `build.mjs`, `serve.mjs`, `scripts/*`, `Caddyfile`, `Dockerfile` | Written for Horizon's site | MIT, Horizon's ([LICENSES/MIT-Horizon.txt](LICENSES/MIT-Horizon.txt)) |
 
 The site loads no third-party code at runtime: no frameworks, CDNs, analytics, trackers or
 cookies. The only requests to other hosts are the browser's calls to `api.github.com`

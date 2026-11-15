@@ -118,4 +118,6 @@ The invite is one constant, `DISCORD_URL` in `components/links.ts`. While it is 
 
 ## Licences
 
+The site is [PolyForm Shield 1.0.0](LICENSE), as the game is. The code that came from Horizon's site keeps Horizon's MIT
+licence ([LICENSES/MIT-Horizon.txt](LICENSES/MIT-Horizon.txt)); Shield covers Sunrise's own changes and additions.
 Every asset is listed in [LEGAL.md](LEGAL.md).
