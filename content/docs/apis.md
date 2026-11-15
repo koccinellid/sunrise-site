@@ -6,7 +6,7 @@ Sunrise is built to be built on. Mods, shaders, agents, server panels, launchers
 
 | Surface | For | Today | Stability |
 | --- | --- | --- | --- |
-| **Mods** | mod authors | One `.hmod` per mod: data-driven blocks, items, recipes and structures, plus optional Rust code on the game's hooks (tick, HUD, keys, commands, blocks, mobs, damage, loot, menus, rendering and more) through the typed `Hooks` trait, compiled into the game by the launcher | experimental |
+| **Mods** | mod authors | One `.hmod` per mod: data-driven blocks, items, recipes and structures, plus optional Rust code on the game's hooks (tick, HUD, keys, commands, blocks, mobs, damage, loot, menus, rendering and more) through the typed `Hooks` trait, compiled by the launcher against the prebuilt game or built to `mod.wasm` for the game's sandbox | experimental |
 | **Shaders** | shader authors | a new shader API in WGSL is being designed: stages with typed inputs, options, reload on save, a debug overlay | planned |
 | **Agent control** | AI agents, scripts, tests | `horizon-ctl` and its MCP server: 96 commands to watch and play the game | preview |
 | **Servers** | hosts, panels, bots | `horizon-server`'s commands, `server.toml` and a local HTTP control API | stable |
@@ -21,13 +21,13 @@ The full pages, one per surface, with their references: [the API portal](/docs/a
 - **Preview**: documented and tested. It may change at a new line (0.1 to 0.2), after a deprecation of at least 30 days during which old and new both work.
 - **Experimental**: opt-in only, and it may change in any release.
 
-Every API has its own version (the native hook points are version 1, the server's control API is `/api/v1`), separate from the game's release number. The whole policy: [stability and versioning](https://github.com/sunrise-org/sunrise/blob/main/docs/api/stability.md).
+Every API has its own version (a mod declares `api = "0.2"`, each hook has its own `hook_version`, the server's control API is `/api/v1`), separate from the game's release number. The whole policy: [stability and versioning](https://github.com/sunrise-org/sunrise/blob/main/docs/api/stability.md).
 
 ## How they are designed
 
 Each API starts from what its users need to do, and from how Sunrise is built: Rust, wgpu and a server thread that runs every world. Sunrise's APIs are its own: they are not modelled on another mod loader's, renderer's or server platform's. Vanilla Minecraft 26.3 is the reference for game concepts such as ids, commands and data packs.
 
-They are safe by default (a mod's data can't run anything, and its code builds only after a warning, into a game of its own; control sockets only listen on your computer, behind a token) and cost nothing when unused.
+They are safe by default (a mod's data can't run anything, and its native code builds only where you allowed native code, and its WebAssembly code runs in a sandbox; control sockets only listen on your computer, behind a token) and cost nothing when unused.
 
 ## References that can't drift
 
