@@ -1,17 +1,17 @@
 # Recipes: crafting and smelting
 
-Copy-paste recipes for the crafting table, the furnaces, the stonecutter and the smithing table. Replace `my_mod` with your mod id.
+Copy-paste recipes for the crafting table, the furnaces, the stonecutter and the smithing table. Replace `my_mod` with your mod id. The examples assume your mod already defines the ruby items and blocks they use.
 
-Recipes are **vanilla 26.3 data pack files**. Each one is a file in `data/my_mod/recipe/`, inside your mod's folder and its one `.hmod`. The file's path gives the recipe's id: `data/my_mod/recipe/ruby_block.json` is `my_mod:ruby_block`.
+Recipes are **vanilla 26.3 data pack files**. Each one is a file in `data/my_mod/recipe/`, inside your mod's folder and its one `.hmod`, alongside `horizon-mod.toml`. The file's path gives the recipe's id: `data/my_mod/recipe/ruby_block.json` is `my_mod:ruby_block`.
 
-> [!NOTE] Checked against `bfbda6a`
-> Every file format and API on this page was checked against the source of Ari's repository at commit `bfbda6a`.
+> [!NOTE] Checked against the mod API
+> This page was checked against the mod API at [arismoko/horizon `de8b4e2`](https://github.com/arismoko/horizon/tree/de8b4e2526df9d7f611515b78123a26a3914176f), which Sunrise merges. The Rust ingredient-hook example was compile-checked against `horizon-mod-api`; the recipes were not tried in game.
 
 ## How recipe files work
 
 - An **ingredient** is an item id (`"minecraft:diamond"`), a tag with `#` (`"#c:gems/ruby"`), or a list of ids (`["minecraft:coal", "minecraft:charcoal"]`).
 - A **result** is an object: `{ "id": "my_mod:ruby", "count": 9 }`. Leave out `count` for one.
-- The game reads recipes **once, when it starts**. Change a file, then restart the game.
+- Sunrise reads recipes when loading data, and reads world data packs again on `/reload`. After changing a file in your mod, rebuild the `.hmod` and restart the game.
 
 ## A shaped recipe
 
@@ -40,7 +40,7 @@ Recipes are **vanilla 26.3 data pack files**. Each one is a file in `data/my_mod
 **Common mistakes:**
 
 - A character in `pattern` that is missing from `key`: the recipe doesn't load. Read the log while you work.
-- The result written as a bare string, `"result": "my_mod:ruby_block"`. Since 1.21 it is an object with `id`.
+- An unknown result item: define your ruby block before using it in a recipe. Use the object form shown above for the result.
 
 ## A shapeless recipe
 
@@ -95,10 +95,10 @@ Recipes are **vanilla 26.3 data pack files**. Each one is a file in `data/my_mod
 
 - The four types: `minecraft:smelting` (furnace), `minecraft:blasting`, `minecraft:smoking` (food) and `minecraft:campfire_cooking`.
 - `cookingtime` is in ticks: 20 is one second.
-- `experience` is what the player gets when they take the result out.
+- `experience` sets furnace-family XP per recipe use; campfire cooking does not award it.
 
 > [!WARNING] Always write `cookingtime`
-> Without it, the game uses 200 for every type, a blast furnace too. Vanilla's own blasting and smoking recipes say 100.
+> Without it, Sunrise uses 200 for every type, a blast furnace too. Set 100 explicitly for the faster blasting and smoking recipes.
 
 ## A stonecutter recipe
 
@@ -166,7 +166,7 @@ More on tags: [Tags](/docs/recipes-tags).
 
 **Status:** Works today.
 
-**You get:** a recipe that loads only when the mod `other_mod` is on. Without it, the file is left out.
+**You get:** a recipe that loads only when `other_mod` is in the enabled server-mod set for this load. Without it, the file is left out.
 
 **File:** `data/my_mod/recipe/ruby_from_other_mod.json`
 
@@ -181,16 +181,16 @@ More on tags: [Tags](/docs/recipes-tags).
 ```
 
 - Every condition in the list must hold.
-- The other forms: `neoforge:true`, `neoforge:not` (with `value`), `neoforge:and` and `neoforge:or` (with `values`).
-- An unknown condition type leaves the file out.
+- Other forms include `neoforge:true`, `neoforge:false`, `neoforge:not` (with `value`), `neoforge:and` and `neoforge:or` (with `values`).
+- An unknown condition in a namespace owned by a registered condition handler refuses reload. A foreign unknown condition leaves the file out and logs an error.
 
-Details: [Conditional data](/docs/modding/how-to/native-mods/conditional-data).
+Details: [Conditional data](/docs/modding/how-to/items/conditional-data).
 
 ## Remove or change a vanilla recipe
 
 **Status:** Works today.
 
-**You get:** no more crafting planks from logs, and every `my_mod` recipe that asked for an iron ingot accepts any iron ingot from the convention tag.
+**You get:** recipes whose ids match `minecraft:*_planks` removed, and every `my_mod` recipe that asked for an iron ingot accepts any iron ingot from the convention tag.
 
 **File:** `data/my_mod/recipe_filter/tweaks.json`
 
@@ -198,7 +198,7 @@ Details: [Conditional data](/docs/modding/how-to/native-mods/conditional-data).
 {
   "filters": [
     { "id": "minecraft:*_planks", "remove": true },
-    { "type": "my_mod:*", "replace_input": { "from": "minecraft:iron_ingot", "to": "#c:ingots/iron" } }
+    { "id": "my_mod:*", "replace_input": { "from": "minecraft:iron_ingot", "to": "#c:ingots/iron" } }
   ]
 }
 ```
@@ -209,7 +209,7 @@ Details: [Conditional data](/docs/modding/how-to/native-mods/conditional-data).
 
 **Common mistake:** a filter with a typo in a key, or with two actions, is skipped with a warning in the log. It never matches every recipe by accident.
 
-Details: [Recipe filters](/docs/modding/how-to/native-mods/recipe-filters).
+Details: [Recipe filters](/docs/modding/how-to/items/recipe-filters).
 
 ## An ingredient kind of your own
 
@@ -238,8 +238,8 @@ struct Mod;
 
 #[mod_api::horizon_mod]
 impl Hooks for Mod {
-    // At load: which items the ingredient can be. Called for every type
-    // outside `minecraft:`, so check the kind first.
+    // At load: candidate items for this custom ingredient.
+    // Built-in kinds are handled by the loader; check our kind first.
     fn ingredient(&self, _: &dyn DataLoadContext, event: &mut IngredientEvent<'_>) {
         if event.kind == "my_mod:undamaged_pickaxe" {
             event.items.push("minecraft:iron_pickaxe".into());
@@ -256,20 +256,20 @@ impl Hooks for Mod {
 }
 ```
 
-- The other fields of the ingredient object reach both hooks as `event.data`, an NBT compound.
-- The answer must be the same every time: the hooks are called once per load and many times per craft.
+- The ingredient object reaches both hooks as `event.data`, an API NBT compound. Neither hook takes a `Host`: they use the owning load or matching loop context, on either side.
+- Give the same answer for the same input: `ingredient` runs once per occurrence per load, including `/reload`; `ingredient_test` can run many times during matching.
 
 **Try it:** build the code into a test instance (`horizon-launcher native-build . --instance Development --trust-native-code`), then try a new and a worn pickaxe in the grid.
 
 **Common mistakes:**
 
 - Not checking `event.kind`: your hook then answers every mod's kinds.
-- A kind no mod answers leaves the list empty, and the recipe doesn't load. That is also what happens to NeoForge ingredient types Sunrise doesn't read itself.
+- With no `ingredient` listener, a custom kind makes the recipe fail to load. If a listener leaves its candidate list empty, the recipe remains available for manual matching but cannot be placed through the recipe book. Supply every candidate item; a nonempty list rejects other items before `ingredient_test` runs.
 
-Details: [A mod's own ingredient kinds](/docs/modding/how-to/native-mods/a-mods-own-ingredient-kinds) and [matching at craft time](/docs/modding/how-to/native-mods/a-mods-own-ingredient-kinds-matching-at-craft-time).
+Details: [A mod's own ingredient kinds](/docs/modding/how-to/items/ingredient-kinds) and [matching at craft time](/docs/modding/how-to/items/ingredient-matching).
 
 ## What isn't here yet
 
-- **NeoForge's ingredient types.** `neoforge:compound`, `neoforge:intersection` and `neoforge:difference` work. **Not yet:** the other `neoforge:` types. **Workaround:** an ingredient kind of your own, as above.
-- **A recipe type of your own** with its own station. **Partly:** a mod's recipe type loads and keeps its JSON, but your code does the matching. Read the recipes with `recipes_of_type` and cache them: [Cache recipe definitions](/docs/modding/how-to/reload-recipes) and [Reading recipe rules](/docs/modding/how-to/native-mods/reading-recipe-rules).
+- **Ingredient kinds beyond the built-ins.** Sunrise reads `neoforge:compound`, `neoforge:intersection`, `neoforge:difference`, `neoforge:components`, `neoforge:block_tag` and `neoforge:custom_display`. For another kind, supply your own hooks as above. See [Built-in item ingredients](/docs/modding/how-to/native-mods/builtin-item-ingredients).
+- **A recipe type of your own** with its own station. **Partly:** register a recipe type and a raw serializer first; an unregistered serializer refuses the recipe load. The registered raw recipes keep their JSON, but your station owns matching and its menu. Read them with `Host::recipes_of_type` and cache definitions after publication: [Recipe serializers and recipe types](/docs/modding/crafting-recipe-kinds), [Cache recipe definitions](/docs/modding/how-to/items/reload-stable-recipes) and [Reading recipe rules](/docs/modding/how-to/items/recipe-rules).
 - More gaps by area: [API gaps](/api-gaps).

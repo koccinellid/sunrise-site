@@ -4,21 +4,21 @@ Send data between your mod's server half and its client half: a message to a pla
 
 Every recipe here needs the Rust part of a mod: start with `cargo horizon-mod new my_mod --template native`, or add code to a mod you have ([Add code to your mod](/docs/mod-code)).
 
-> [!NOTE] Checked against `bfbda6a`
-> Every hook, type and limit below was checked against Ari's repository at commit `bfbda6a`. The snippets were checked against the API's declarations, not compiled one by one.
+> [!NOTE] Checked against the mod API at `de8b4e2`
+> Checked against the mod API at [arismoko/horizon `de8b4e2`](https://github.com/arismoko/horizon/tree/de8b4e2526df9d7f611515b78123a26a3914176f), which Sunrise merges. The Rust examples below were compile-checked against horizon-mod-api, with the final command methods added to the mana example's `Hooks` implementation. They were not tried in game.
 
 ## Before you start: one mod, two sides
 
 - The **server** half runs in server hooks (`&mut dyn ServerHost`). The **client** half runs in client hooks (`&mut dyn ClientHost`). In single player both run, in the same game.
-- Your manifest must say `side = "both"` ([The manifest](/docs/mod-manifest)). Then a server and its players must have the same version of your mod, or the player can't join.
-- Messages travel on **channels** named `my_mod:name`. The name uses `a-z`, `0-9` and `_ . / -`, 1 to 64 characters.
+- Use `side = "both"` for these examples ([The manifest](/docs/mod-manifest)). This mod belongs on the server and its clients; its required payload declarations must agree at join.
+- Register namespaced payload IDs such as `my_mod:hello` in `Hooks::register`. Each receiving direction has one handler, not a broadcast to every mod.
 
-> [!WARNING] Typed payloads are not there yet
-> Java mods register a payload type once and send typed values. In Sunrise that design is accepted but not delivered: today a message is **bytes on a channel**. The recipes below are what works now, with the closest thing to typed payloads in [A struct instead of bytes](#a-struct-instead-of-bytes). Design: [Typed payloads](/docs/modding/concepts/typed-payloads).
+> [!TIP] Register typed payloads
+> Derive `PayloadCodec` for a message, register it, and keep the returned `ToClient<T>` or `ToServer<T>` token. The game encodes and decodes the value and negotiates its schema. Native and wasm mods use the same API. See [Client networking](/docs/modding/how-to/client/networking).
 
 ## Send a message to a player
 
-**Status:** Works today, for players on Sunrise (Horizon) clients. Vanilla clients get nothing.
+**Status:** Works today with compatible registered payloads on both peers.
 
 **You get:** when a player joins, the server sends them a line, and their client shows it in chat.
 
@@ -26,56 +26,84 @@ Every recipe here needs the Rust part of a mod: start with `cargo horizon-mod ne
 
 ```rust
 use mod_api::*;
+use std::sync::OnceLock;
 
-const HELLO: &str = "my_mod:hello";
+#[derive(PayloadCodec)]
+struct Hello {
+    text: String,
+}
+
+static HELLO: OnceLock<ToClient<Hello>> = OnceLock::new();
 
 #[derive(Default)]
 struct Mod;
 
 #[mod_api::horizon_mod]
 impl Hooks for Mod {
-    // Server: a player joined. Send them some bytes.
-    fn player_logged_in(&self, host: &mut dyn ServerHost, event: &mut PlayerLoggedInEvent<'_>) {
-        let text = format!("Welcome, {}!", event.name);
-        let _ = host.net_send_to_player(event.player, HELLO, text.as_bytes());
+    fn register(&self, r: &mut dyn Registrar, _: &RegistrationContext) {
+        let mut payloads = r.payload_handlers();
+        let mut view = payloads.registrar("1");
+        let token = view.play_to_client_typed::<Hello>(
+            PayloadId("my_mod:hello".into()),
+            |value, cx| {
+                let host = cx.client_host().map_err(|e| format!("{e:?}"))?;
+                host.chat_line(Text::literal(value.text)).map_err(|e| format!("{e:?}"))
+            },
+        );
+        let _ = HELLO.set(token);
     }
 
-    // Client: a message from the server. Every mod hears every channel: check yours.
-    fn net_from_server(&self, host: &mut dyn ClientHost, event: &mut NetFromServerEvent<'_>) {
-        if event.channel != HELLO {
-            return;
+    fn player_logged_in(&self, host: &mut dyn ServerHost, event: &mut PlayerLoggedInEvent<'_>) {
+        if let (Some(token), Some(player)) = (HELLO.get(), host.player(event.player)) {
+            let message = Hello { text: format!("Welcome, {}!", event.name) };
+            let _ = token.send(host, player, &message);
         }
-        let Ok(text) = std::str::from_utf8(event.data) else {
-            return; // not text: ignore it
-        };
-        let _ = host.chat_line(Text::literal(text)); // shown on this client only
     }
 }
 ```
 
-- `net_send_to_player` takes the player's UUID (`event.player` here, `player.uuid()` from a `PlayerRef`).
-- The message leaves at the end of the server tick. You can send from any server hook.
-- `Ok` means "accepted", not "delivered": a player who left, or who isn't on a Horizon client, doesn't get it.
+- `ToClient::send` takes a `PlayerRef`, obtained here from the joining player's UUID.
+- The default handler executor is the receiving main thread. `cx.client_host()` gives the client host there.
+- `Ok(PayloadAccepted::Queued)` means accepted locally, not delivered. These short examples discard send errors; a real mod should handle them.
 
-**Try it:** build into your test instance, open a world: the welcome line appears in chat.
+**Try it:** build into your test instance, open a world: the welcome line should appear in chat.
 
 ## Send a request from the client to the server
 
-**Status:** Works today, to Sunrise (Horizon) servers. A vanilla server refuses it with an error.
+**Status:** Works with a negotiated serverbound payload.
 
 **You get:** `/ping` typed on the client sends a request; the server answers in chat.
 
 ```rust
 use mod_api::*;
+use std::sync::OnceLock;
 
-const PING: &str = "my_mod:ping";
+#[derive(PayloadCodec)]
+struct Ping {
+    nonce: i32,
+}
+
+static PING: OnceLock<ToServer<Ping>> = OnceLock::new();
 
 #[derive(Default)]
 struct Mod;
 
 #[mod_api::horizon_mod]
 impl Hooks for Mod {
-    // Client: a client-side command.
+    fn register(&self, r: &mut dyn Registrar, _: &RegistrationContext) {
+        let mut payloads = r.payload_handlers();
+        let mut view = payloads.registrar("1");
+        let token = view.play_to_server_typed::<Ping>(
+            PayloadId("my_mod:ping".into()),
+            |_value, cx| {
+                let player = cx.player().map_err(|e| format!("{e:?}"))?;
+                let host = cx.server_host().map_err(|e| format!("{e:?}"))?;
+                player.tell(host, Text::literal("Pong!")).map(drop).map_err(|e| format!("{e:?}"))
+            },
+        );
+        let _ = PING.set(token);
+    }
+
     fn register_client_commands(&self, _: &mut dyn ClientHost, event: &mut RegisterClientCommandsEvent<'_>) {
         event.commands.push(Command::new("ping"));
     }
@@ -84,87 +112,88 @@ impl Hooks for Mod {
         if event.command != "ping" {
             return Flow::Continue;
         }
-        if let Err(why) = host.net_send_to_server(PING, &[]) {
-            let _ = host.chat_line(Text::literal(format!("Can't ping: {why}")));
+        if let Some(token) = PING.get() {
+            if let Err(why) = token.send(host, &Ping { nonce: 0 }) {
+                let _ = host.chat_line(Text::literal(format!("Can't ping: {why:?}")));
+            }
         }
-        Flow::Cancel // we ran it
-    }
-
-    // Server: a client's message. Treat it as untrusted player input.
-    fn net_from_client(&self, host: &mut dyn ServerHost, event: &mut NetFromClientEvent<'_>) {
-        if event.channel != PING {
-            return;
-        }
-        if let Some(player) = host.player(event.player) {
-            let _ = player.tell(host, Text::literal("Pong!"));
-        }
+        Flow::Cancel
     }
 }
 ```
 
-- `net_from_client` runs in the server tick **after** the message arrives.
-- `event.player` is the UUID of the player whose client sent it. That part you can trust; `event.data` you can't.
+- `cx.player()` identifies the connection's player in play, not a player chosen from the message body.
+- `PayloadCodec` checks the wire representation. Your handler must still validate application rules, permissions and ranges before changing game state.
 
 **Try it:** open a world, type `/ping`.
 
 **Common mistakes:**
 
-- Not checking `event.channel`: your code runs for every mod's messages.
-- Trusting `event.data`: a modified client can send anything. Check every value, as you would a command argument.
-- Sending before the player has joined (on the title screen, while connecting): `net_send_to_server` returns an error.
+- Sending before negotiation or without a connection: a send returns a named error, such as `NotNegotiated` or `Disconnected`.
+- Treating a decoded value as permission to act: a modified client can choose its values.
+- Asking for a world host in a network-thread handler: use `enqueue_work` to run world work on the main thread. The examples keep the default main-thread executor.
 
 ## A struct instead of bytes
 
-**Status:** Partly. Encoding and decoding a struct works today. Registering it as a payload type, so the game does it for you, is **Not yet**.
+**Status:** Works today, including registered typed payloads.
 
-**Workaround:** derive `PayloadCodec` on your message, encode it yourself, send the bytes on a channel, decode them on the other side.
+**You get:** the server sends a mana value, and the client decodes it and shows it in chat. Keep the token returned by registration; do not encode a separate envelope around the message.
 
 ```rust
 use mod_api::*;
+use std::sync::OnceLock;
 
-const MANA: &str = "my_mod:mana";
-
-// Vanilla's network encoding: fields in order, VarInt lengths, big-endian numbers.
-#[derive(Debug, PayloadCodec)]
+#[derive(PayloadCodec)]
 struct ManaUpdate {
     current: i32,
     max: i32,
-    reason: String, // at most 4096 bytes by default
+    reason: String,
 }
 
-// Server side: encode, then send.
-fn send_mana(host: &mut dyn ServerHost, player: u128, current: i32, max: i32) {
-    let message = ManaUpdate { current, max, reason: "regen".into() };
-    match encode_payload(&message, 30_000) {
-        Ok(bytes) => {
-            let _ = host.net_send_to_player(player, MANA, &bytes);
-        }
-        Err(error) => eprintln!("my_mod: can't encode mana: {error:?}"),
+static MANA: OnceLock<ToClient<ManaUpdate>> = OnceLock::new();
+
+#[derive(Default)]
+struct Mod;
+
+#[mod_api::horizon_mod]
+impl Hooks for Mod {
+    fn register(&self, r: &mut dyn Registrar, _: &RegistrationContext) {
+        let mut payloads = r.payload_handlers();
+        let mut view = payloads.registrar("1");
+        let token = view.play_to_client_typed::<ManaUpdate>(
+            PayloadId("my_mod:mana".into()),
+            |value, cx| {
+                let host = cx.client_host().map_err(|e| format!("{e:?}"))?;
+                host.chat_line(Text::literal(format!(
+                    "Mana: {}/{} ({})", value.current, value.max, value.reason,
+                ))).map_err(|e| format!("{e:?}"))
+            },
+        );
+        let _ = MANA.set(token);
     }
 }
 
-// Client side, in `net_from_server`: decode, or drop what doesn't decode.
-fn read_mana(event: &NetFromServerEvent<'_>) -> Option<ManaUpdate> {
-    if event.channel != MANA {
-        return None;
+fn send_mana(host: &mut dyn ServerHost, player: PlayerRef, current: i32, max: i32) {
+    if let Some(token) = MANA.get() {
+        let message = ManaUpdate { current, max, reason: "command".into() };
+        let _ = token.send(host, player, &message);
     }
-    decode_payload::<ManaUpdate>(event.data).ok()
 }
 ```
 
-- `encode_payload(&value, limit)` refuses a body over `limit` bytes. Use 30 000 or less: that is the channel's cap.
-- `decode_payload` refuses short, long or malformed bytes, with a `PayloadDecodeError`. It never panics.
-- Field types: `bool`, `u8`, `i8`, `i16`, `u16`, `i32`, `i64`, `f32`, `f64`, `VarInt`, `VarLong`, `String`, `Vec<T>`, `Option<T>`, `Box<T>`, and your own types that derive `PayloadCodec`. An enum is sent as its variant's position.
-- Both sides must use the same struct. Change a field and both must update, which `side = "both"` already ensures.
+- The body is the value's `PayloadCodec` encoding: fields in order, VarInt lengths and big-endian fixed-width numbers.
+- A malformed typed body closes the session, naming the mod, before the handler runs. Encoding a value outside codec bounds returns `EncodeFailed` before queueing it.
+- The derive supplies a schema fingerprint. A required peer with another shape is refused at join; when both peers declare a payload `optional()`, an incompatible or absent payload is unavailable and sends return `UnsupportedPeer`.
+- Both sides use the same struct. The registration version (`"1"` here) and schema participate in negotiation.
 
 > [!TIP] Sending NBT
-> For NBT, wrap it in a `Tag` (`Tag::Compound(compound)`): `tag.to_network_bytes()` writes vanilla's network NBT, and `Tag::from_network_bytes(&bytes, None)` reads it back, with the number of bytes it used. See [Maths and network NBT](/docs/modding/how-to/maths-and-network-nbt).
+> For NBT, wrap it in a `Tag` (`Tag::Compound(compound)`): `tag.to_network_bytes()` writes vanilla's network NBT, and `Tag::from_network_bytes(&bytes, None)` reads it back, with the number of bytes it used. See [Maths and network NBT](/docs/modding/reference/maths-and-network-nbt).
 
 ## A command that sends data to a player
 
 **Status:** Works today.
 
-**You get:** `/setmana <player> <amount>`, run by an operator, sends the new value to that player's client.
+**You get:** `/setmana <player> <amount>`, run by an operator, sends the new value to that player's client. Add these methods inside the mana example's `impl Hooks for Mod`.
 
 ```rust
 fn register_commands(&self, _: &mut dyn ServerHost, event: &mut RegisterCommandsEvent<'_>) {
@@ -180,31 +209,30 @@ fn run_mod_command(&self, host: &mut dyn ServerHost, event: &mut RunModCommandEv
     else {
         return Flow::Continue;
     };
-    send_mana(host, target.uuid(), *amount, 100); // from the recipe above
+    send_mana(host, *target, *amount, 100);
     let _ = host.commands().feedback(Text::literal(format!("Mana set to {amount}")));
     Flow::Cancel
 }
 ```
 
-More on commands: [Commands](/docs/recipes-commands), [Typed server commands](/docs/modding/how-to/native-mods/typed-server-commands).
+More on commands: [Commands](/docs/recipes-commands).
 
 > [!TIP] Keeping a value in step
-> If the value lives on a player, an entity or a block and should always match on the client, don't send it by hand: store it in an attachment with `sync: true` and the game sends it for you. See [A value on the player that the HUD shows](/docs/recipes-saved-data#a-value-on-the-player-that-the-hud-shows).
+> If the value belongs in a player, entity or block entity attachment and should match on the client, use an attachment with `sync: true`. See [A value on the player that the HUD shows](/docs/recipes-saved-data#a-value-on-the-player-that-the-hud-shows).
 
 ## Limits to know
 
-- At most **30 000 bytes** a message.
-- At most **32 messages a tick** each way, per player.
-- A message to a player leaves at the end of the tick; one from a client is handled in the next server tick.
-- One player's messages arrive in the order they were sent. A client's messages run after that tick's other packets from the same player.
+- Sends check connection byte budgets and whole-packet framing; `Backpressure` and `FrameTooLarge` report refusals.
+- `Queued` is local acceptance only. Disconnect invalidates pending work; a handler's replies are staged in its transaction.
+- Payload handlers default to the logical receiving main thread. A network executor has no direct world access.
+- Required declarations must match at join. Use `optional()` only when the feature can work without that payload on the peer.
 
 ## What `Wire` is for
 
-`#[derive(mod_api::Wire)]` sounds like networking but isn't: it is how values cross between native and sandboxed (wasm) mods. You need it only for types another mod reads through your public API. For network messages, use `PayloadCodec`. More: [Wire types](/docs/modding/how-to/wire-types).
+`#[derive(mod_api::Wire)]` is not the network payload codec: it describes the shared-memory boundary between the game and wasm mods, including mod-to-mod calls. Derive it for your own types that cross that boundary. For network message bodies, use `PayloadCodec`. More: [Wire types](/docs/modding/concepts/wire-types).
 
-## What isn't here yet
+## What these recipes do not cover
 
-- **Registered typed payloads** (`ToClient<T>`, `ToServer<T>`, version negotiation, optional peers). **Workaround:** [A struct instead of bytes](#a-struct-instead-of-bytes).
-- **Messages to and from vanilla clients or servers** on your channel: they never get them. A client can send a raw vanilla packet with `host.send_packet(...)`, but that is for talking to non-Horizon servers, not your own mod.
-- **Configuration-phase messages** (before the player is in the world): not yet.
-- More gaps: [API gaps: networking](/api-gaps#networking).
+- **A vanilla peer running your mod's handlers.** These recipes require compatible payload declarations and code on both peers; they are not a way to install mod logic on an unmodified client or server.
+- **A full configuration-phase recipe on this page.** The API already has `configuration_*` and `common_*` registration methods. Configuration handlers cannot obtain a play player from `cx.player()`.
+- More on registration, tokens and optional peers: [Client networking](/docs/modding/how-to/client/networking).

@@ -1,12 +1,12 @@
 # Blocks, items and data files
 
-The reference for a mod's data: every field of a block and an item, where vanilla-format files go, namespaces and limits. For a guided first block, see [Build your first block](/docs/build-your-first-block).
+The reference for a mod's data: common block and item fields, where vanilla-format files go, namespaces and limits. For a guided first block, see [Build your first block](/docs/build-your-first-block).
 
 ## How data works
 
-- Each new block or item **copies a vanilla one**, its template, and changes what differs.
+- Each new block or item **copies a vanilla template** and changes what differs. Items copy data components, not every behaviour tied to a vanilla item's identity.
 - Recipes, loot tables, tags, models, textures and names use **vanilla 26.3's own formats**, as in data packs and resource packs.
-- The game reads it all **once, when it starts**. Nothing compiles.
+- Sunrise loads block and item declarations **at startup**. Rebuild and restart after changing them. The data files themselves need no compilation, even when their mod also has Rust code.
 
 These files sit in the same mod as any Rust code: one folder, one `.hmod`. See [How a mod works](/docs/how-mods-work).
 
@@ -39,11 +39,11 @@ ruby/
 - `data/minecraft/tags/` adds the block to vanilla's tags.
 - `assets/ruby/` is vanilla resource pack files: how things look and what they are called.
 
-Its manifest is the usual one, with `capabilities = ["registries"]`: see [The manifest](/docs/mod-manifest).
+Its manifest is the usual one, with `api = "0.2"` and `capabilities = ["registries"]`. For this content to work on both a server and its clients, set `side = "both"`: see [The manifest](/docs/mod-manifest).
 
 ## Blocks
 
-**Where:** `data/<id>/horizon/block/<name>.json` becomes the block `<id>:<name>`.
+**Where:** `data/<namespace>/horizon/block/<name>.json` becomes the block `<namespace>:<name>`. The namespace is your mod id or one listed in `namespaces`.
 
 ```json
 {
@@ -62,7 +62,7 @@ Its manifest is the usual one, with `capabilities = ["registries"]`: see [The ma
 | `explosion_resistance` | How well it stands up to explosions. |
 | `light` | The light it gives, 0 to 15. |
 | `requires_tool` | `true`: it drops nothing unless mined with the right tool. Tags say which tool. |
-| `friction` | How slippery it is. Ice is `0.98`. |
+| `friction` | How slippery it is, 0 to 2. |
 | `map_color` | Its colour on maps: a vanilla map colour id, 0 to 61. |
 | `sounds` | A vanilla block whose sounds it uses. |
 
@@ -70,7 +70,7 @@ Its manifest is the usual one, with `capabilities = ["registries"]`: see [The ma
 
 ## Items
 
-**Where:** `data/<id>/horizon/item/<name>.json` becomes the item `<id>:<name>`.
+**Where:** `data/<namespace>/horizon/item/<name>.json` becomes the item `<namespace>:<name>`, in a namespace your mod owns.
 
 ```json
 { "template": "minecraft:diamond", "rarity": "uncommon" }
@@ -81,6 +81,8 @@ Its manifest is the usual one, with `capabilities = ["registries"]`: see [The ma
 | `template` | The vanilla item it copies. |
 | `max_stack_size` | 1 to 99. |
 | `rarity` | `common`, `uncommon`, `rare` or `epic`: the colour of its name. |
+
+Items can also set or remove data components with `components`. These tables cover the common fields, not every declaration option; see the [content reference](/docs/modding/how-to/content-mods) for the rest.
 
 ## Vanilla-format files
 
@@ -102,17 +104,17 @@ These follow vanilla 26.3 exactly, so the [Minecraft Wiki's data pack pages](htt
 ## Namespaces
 
 - Your files go under your mod id: `assets/<id>/` and `data/<id>/`.
-- You may also write to `data/minecraft/tags/` and `data/c/tags/`. Tags are the only files a mod may put under `minecraft`.
-- A mod made from a Java mod whose files use other names lists them in the manifest: `namespaces = ["kaisyn", "towns_and_towers"]`. Blocks and items are still declared under `data/<id>/horizon/`.
+- You may also write to `data/minecraft/tags/`, `data/c/tags/` and `assets/minecraft/atlases/`. Only tags and atlas files may use `minecraft`.
+- A mod made from a Java mod whose files use other names lists them in the manifest: `namespaces = ["kaisyn", "towns_and_towers"]`. Blocks and items may be declared under `data/<owned_namespace>/horizon/` too.
 - `minecraft`, `c` and `horizon` can't be listed.
-- Two mods that are on can't own the same namespace. The game keeps the first and logs the clash.
+- Two mods that are on can't own the same namespace. Sunrise keeps the first in load order, leaves the other's content out and logs the clash.
 
 ## Limits and errors
 
-- At most 65,536 files, 16 MiB each and 512 MiB in all. File names use vanilla's resource-name characters.
-- A file the game can't read, such as a model that doesn't parse, is **logged and skipped**, as vanilla does. The rest of the mod still loads, so read the log while you work.
-- An unknown key in a block or item file is **refused**: the mod stays off, with the reason on its row in the Mods screen.
-- Mods with data work in single player today. Playing them together on a server is planned.
+- Content is limited to 65,536 files, 16 MiB each and 512 MiB in all. Paths under `assets/` and `data/` use lowercase letters, digits, `_`, `.`, `-` and `/`, with no empty, `.` or `..` path segments.
+- A content mod whose declarations fail validation is left out, with the reason in the log. Do not assume a bad file is simply skipped; read the log while you work.
+- An unknown key in a block or item file is **refused**, not silently ignored.
+- Content mods work in single player, on LAN and on dedicated servers. Clients need matching registry content; `side = "both"` also makes Sunrise compare mod ids and versions when they join.
 
 ## Java jars as a source
 

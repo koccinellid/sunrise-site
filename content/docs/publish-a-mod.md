@@ -30,9 +30,9 @@ Take your `.hmod` from your computer to the mod registry, where players find it 
 ## What the registry accepts today
 
 - **A mod with data only:** yes, through the form below.
-- **A mod with Rust code:** not through the form yet. The form only knows code mods in their [legacy format](/docs/legacy-native-mods#package-a-native-mod).
+- **A mod with Rust code:** not through the form yet. Its code-mod kind is still the old `.hnmod` bundle, which Sunrise doesn't load ([older mod systems](/docs/what-changed)).
 
-Until the form learns the single `.hmod`, publish a code mod as a release of your own repository, and say in its README which game commit it pins. Ari's registry already takes them: [Publishing your mod](/docs/modding/how-to/publish) in the reference book.
+Until the form takes a `.hmod` with code, publish a code mod as a release of your own GitHub repository, and say in its README which game build it pins. Players install a native mod from there with **Add from GitHub** ([Install from GitHub](/docs/modding/how-to/native-mods/install-from-github)).
 
 ## Step 2: Sign it (optional, recommended)
 
@@ -66,7 +66,7 @@ Sunrise uses [minisign](https://jedisct1.github.io/minisign/).
 Open [playsunrise.net/mods/submit](/mods/submit) and sign in with GitHub. The page reads only your public profile.
 
 - **The file:** the kind (mod or shader pack), the file, its id and version, the Minecraft version (26.3) and what changed.
-- **Its page:** the name, a one-line summary, a description in Markdown, the authors, the licence, the source address and, optionally, a square PNG icon of at most 256 KiB.
+- **Its page:** the name, a one-line summary, a description in Markdown, the authors, the licence, the source address, 1 to 3 categories and, for a new project, a square PNG icon of 64 to 1024 pixels and at most 256 KiB.
 - **Signature:** your public key, for a new project, and the file's `.minisig`.
 
 Press **Submit for review**. It checks the file again and opens a pull request in [sunrise-org/horizon-mods](https://github.com/sunrise-org/horizon-mods) that adds `mods/<id>.toml`, with you as the project's owner. The repository's checks run `cargo horizon-mod check` again and post the report.
@@ -83,7 +83,7 @@ When the pull request is merged, the file becomes a release of horizon-mods with
 ## Updates
 
 - Use the same form with a new version.
-- The project's owners publish updates of a mod with data only without another review. Every version of a mod with code is read again.
+- An update that changes only the version file merges once its checks pass. A change to the project's page waits for review.
 - If the project has a key, the new file must be signed with it.
 
 Without the form, you can open the pull request by hand: the [horizon-mods README](https://github.com/sunrise-org/horizon-mods) says how. The registry's file formats are in [the mod index reference](/docs/api/mod-index).

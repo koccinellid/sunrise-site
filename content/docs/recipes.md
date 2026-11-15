@@ -11,7 +11,7 @@ Short, copy-paste answers to "how do I make X?": a block, a food, a mob, an ore,
 3. Replace `my_mod` with your mod id everywhere: in paths, ids and names.
 4. Build and try it, as the recipe says.
 
-Everything goes into **one mod folder and one `.hmod` file**. A recipe with code puts its Rust in `src/lib.rs`, beside the `data/` and `assets/` of the same mod. New to this? Read [How a mod works](/docs/how-mods-work) first.
+Everything goes into **one mod folder and one `.hmod` file**. A recipe with code puts its Rust in `src/lib.rs`, with `data/` and `assets/` at the root of the same mod. New to this? Read [How a mod works](/docs/how-mods-work) first.
 
 ## What the status line means
 
@@ -22,7 +22,7 @@ Every recipe starts with one of these:
 - **Not yet:** the game can't do it. The recipe says what is missing and shows the closest thing that works, marked **Workaround**.
 
 > [!NOTE] Checked against one commit
-> These recipes were checked against the source of Ari's repository at commit `bfbda6a` ([arismoko/horizon](https://github.com/arismoko/horizon)): every type, hook, field and file path. The Rust snippets were checked against the API's declarations, not compiled one by one. If the compiler disagrees after you update, `cargo doc -p horizon-mod-api --open` shows the current API.
+> These recipes were checked against the mod API at [arismoko/horizon `de8b4e2`](https://github.com/arismoko/horizon/tree/de8b4e2526df9d7f611515b78123a26a3914176f), which Sunrise merges: every type, hook, field and file path. Each page's note says which of its Rust snippets were compiled against `horizon-mod-api`; none were run in the game. If the compiler disagrees after you update, `cargo doc -p horizon-mod-api --open` shows the current API.
 
 ## The recipes
 

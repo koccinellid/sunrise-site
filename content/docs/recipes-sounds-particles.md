@@ -1,13 +1,13 @@
 # Recipes: sounds and particles
 
-Add your own sounds, play them for everyone or for one player, and spawn particles: vanilla's or your own. Sound and texture files go in `assets/`, the code in `src/lib.rs`, all in the same mod.
+Add your own sounds, play them for everyone or for one player, and spawn particles: vanilla's or your own. Sound and texture files go in `assets/`, the code in `src/lib.rs`, all in the same `.hmod` with one `horizon-mod.toml`.
 
-> [!NOTE] Checked against `bfbda6a`
-> Every hook, type and file path below was checked against Ari's repository at commit `bfbda6a`. The snippets were checked against the API's declarations, not compiled one by one.
+> [!NOTE] Checked against `de8b4e2`
+> Checked against the mod API at [arismoko/horizon `de8b4e2`](https://github.com/arismoko/horizon/tree/de8b4e2526df9d7f611515b78123a26a3914176f), which Sunrise merges. The block sound and particle examples and the client sound and particle fragments were compiled together against `horizon-mod-api`, with one mod registration impl.
 
 ## Who hears it: server or client
 
-- **Server code** (block clicks, commands, ticks) plays a sound or sends particles **to the players near it**. Use this for anything that happens in the world.
+- **Server code** (block clicks, commands, ticks) uses `LevelRef` to play a sound or send particles **to the players near it**. Use this for anything that happens in the world.
 - **Client code** (screens, HUD, keys) plays a sound or adds particles **for this player only**. Nothing goes to the server.
 
 Pick the side first. A sound played on the client is never heard by other players.
@@ -133,17 +133,17 @@ let playing = host.play_local_sound(&thunder, 20);
 
 - `play_local_sound` returns a `SoundRef` you can `stop` or `fade` later. `None` means it was refused.
 - It takes `&self`, so a screen or HUD hook can call it.
-- `.looping(delay)` repeats the sound, `delay` ticks apart.
+- `.looping(delay)` repeats the sound, waiting `delay` ticks after each play ends; 0 loops seamlessly.
 
 A full example in a screen: [A screen with no block behind it](/docs/recipes-menus#a-screen-with-no-block-behind-it).
 
-## Change or silence any sound
+## Change or silence level sounds
 
 **Status:** Works today.
 
-`play_level_sound_at_position` and `play_level_sound_at_entity` see every level sound before it is sent (server) or played (client). Change its volume or pitch, or return `Flow::Cancel` to drop it. To dull every sound for a moment (ears ringing after a blast), a client calls `host.muffle_sounds(amount, lowpass, ticks, &["my_mod:ear.ringing"])`.
+`play_level_sound_at_position` and `play_level_sound_at_entity` receive a `HostSide` for server or client level-sound requests. Change the event's sound, source, volume or pitch, or return `Flow::Cancel` to drop it. Server `/playsound` packets bypass these hooks; incoming packets ask on the client. UI and sound-engine-only playback do not ask them. To dull every sound for a moment (ears ringing after a blast), a client calls `host.muffle_sounds(amount, lowpass, ticks, &["my_mod:ear.ringing"])`.
 
-Details: [Level sounds](/docs/modding/how-to/native-mods/level-sounds) and [Temporary client sound effects](/docs/modding/how-to/client-effects).
+Details: [Level sounds](/docs/modding/how-to/world/level-sounds) and [Temporary client sound effects](/docs/modding/how-to/client/client-effects).
 
 ## Particles in the world, for everyone
 
@@ -202,7 +202,7 @@ Give `my_mod:burner` its block JSON as in [the chime](#play-a-sound-in-the-world
 
 - `particle_key` takes any vanilla particle id (`minecraft:smoke`, `minecraft:heart`...). An unknown id is reported when the game loads.
 - Block particles (`minecraft:block`, `falling_dust`...) need a block state in place of `None`.
-- Item particles: `ParticleOptions::item_stack(item_key, stack)`. See [Server item particles](/docs/modding/how-to/native-mods/server-item-particles).
+- Item particles: `ParticleOptions::item_stack(key, stack)`, with the retained key for `minecraft:item`. See [Server item particles](/docs/modding/how-to/client/server-item-particles).
 - `true` means queued, not drawn: players' particle settings still apply.
 
 **Try it:** place it, right-click it.
@@ -224,12 +224,12 @@ if let Some(key) = FLAME.get() {
 }
 ```
 
-- Position, then velocity, in blocks.
+- Position in blocks, then velocity in blocks per tick.
 - It needs a loaded world: `false` on the title screen.
 - Limit how often you call it: once per frame adds up fast.
 - Breaking or eating particles of an item: `host.item_particle_options(&stack)` gives the options.
 
-More: [Client particles](/docs/modding/how-to/native-mods/particles-and-bot-movement).
+More: [Client particles](/docs/modding/how-to/client/particles-and-movement-queries).
 
 ## A particle of your own
 
@@ -260,23 +260,27 @@ More: [Client particles](/docs/modding/how-to/native-mods/particles-and-bot-move
 Then ask for its key, as for a vanilla one:
 
 ```rust
+// Alongside FLAME, at module scope:
+static SPARK: OnceLock<ParticleKey> = OnceLock::new();
+
+// Inside register:
 let _ = SPARK.set(r.particle_key("my_mod:spark"));
 ```
 
 - The file's path names the particle: `assets/my_mod/particles/spark.json` is `my_mod:spark`. There is no registry file to add.
 - Use it with `send_particles` (server) or `add_particle` (client) like any other key.
 - `horizon:behaviour` is optional, and every key in it too. It is Sunrise's own addition to vanilla's format:
-  - `velocity`, `velocity_jitter`: blocks per tick, added to the velocity the spawn call gives (each axis up to 16).
-  - `gravity`, `friction` (0 to 1), `lifetime` (1 to 12000 ticks).
-  - `size` and `alpha` (0 to 1): from the first number to the second over its life.
-  - `animation`: `age` (first to last sprite over its life), `loop` (with `frame_ticks`), `random` or `first`.
+  - `velocity`: −16 to 16 blocks per tick per axis, added to the spawn velocity. `velocity_jitter`: 0 to 16 per axis, adding a random offset between minus and plus that value.
+  - `gravity` (−100 to 100), `friction` (0 to 1), `lifetime` (1 to 12000 ticks).
+  - `size` (0 to 16) and `alpha` (0 to 1): from the first number to the second over its life.
+  - `animation`: `age` (first to last sprite over its life), `loop` (with `frame_ticks` from 1 to 200, default 2; only valid with `loop`), `random` or `first`.
 - A value out of range or an unknown key: the whole `horizon:behaviour` is ignored, with a warning in the log.
-- Movement beyond these keys (a Java `Particle` subclass): **Not yet**.
+- For code-defined movement, register a `ParticleProvider` with `Hooks::register_particle_providers`. Its `tick(&self, particle: &mut ModParticle)` edits the particle without a `Host`; the engine keeps the sprite rendering. Native and wasm mods use the same interface.
 
 **Try it:** spawn it with the burner above, using `SPARK` in place of `FLAME`.
 
-## What isn't here yet
+## Beyond these recipes
 
-- **A particle class of your own** with code for its movement or rendering. **Workaround:** the `horizon:behaviour` keys above, or many particles spawned from code, each with its own velocity.
-- **Custom block sound sets.** A block's `"sounds"` property takes a vanilla block's set, such as `"minecraft:amethyst_block"`. **Workaround:** play your own sound from a `BlockPart`, as in [the chime](#play-a-sound-in-the-world).
-- More gaps: [API gaps: sounds](/api-gaps#sounds) and [particles](/api-gaps#particles).
+- **Code-defined particle movement:** use the provider above when the `horizon:behaviour` keys are not enough. Keep per-particle state in `ModParticle::state`, not in the shared provider.
+- **Custom block sound sets:** a block JSON's `properties.sounds` takes a vanilla block's set, such as `"minecraft:amethyst_block"`. A `BlockPart::sound_type` listener can edit `event.sound` (`BlockSoundType`) for steps, falls, placement, breaking and digging, including your own sound events. Mining hit sounds use the separate client `BlockPart::play_hit_sound` method. These do not replace sculk growth sounds.
+- More: [Block hit sounds](/docs/modding/how-to/world/block-hit-sounds) and [Level sounds](/docs/modding/how-to/world/level-sounds).

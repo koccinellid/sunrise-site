@@ -19,9 +19,9 @@ The numbers below are Sunrise before and after a round of performance work, on a
 - Render distance 16 over a village: **8 to 1,041 FPS**. In a forest: 28 to 316 FPS.
 - Render distance 32 improved too (a village went from 4 to 48 FPS) but **still stutters in places**: the slow frames are game ticks while chunks load, not drawing.
 
-The full tables, with the method and the Linux software-rendering run, are in [docs/graphics.md](https://github.com/sunrise-org/horizon/blob/main/docs/graphics.md#results).
+The full tables, with the method and the Linux software-rendering run, are in [docs/graphics.md](https://github.com/sunrise-org/sunrise/blob/main/docs/graphics.md#results).
 
-**Sunrise against vanilla.** The benchmark exists: `tools/perf_bench.py` starts Sunrise, vanilla 26.3 and vanilla with Sodium, Lithium, FerriteCore and ImmediatelyFast on the same machine, world, camera path and settings, and computes every number the same way. [docs/benchmark.md](https://github.com/sunrise-org/horizon/blob/main/docs/benchmark.md) says how it keeps the comparison fair.
+**Sunrise against vanilla.** The benchmark exists: `tools/perf_bench.py` starts Sunrise, vanilla 26.3 and vanilla with Sodium, Lithium, FerriteCore and ImmediatelyFast on the same machine, world, camera path and settings, and computes every number the same way. [docs/benchmark.md](https://github.com/sunrise-org/sunrise/blob/main/docs/benchmark.md) says how it keeps the comparison fair.
 **Measure your own computer.** Sunrise's half of that benchmark is built into the game. Close other heavy apps,
 plug in a laptop, and run in a terminal:
 
@@ -45,7 +45,7 @@ The report is a `.json` file in the `benchmarks` folder of the game folder:
 
 It holds startup times, each scene's chunk load time, the frame rate with its 1% and 0.1% lows, memory, and your
 machine (operating system, processor, memory, graphics card and driver). Its format is
-[docs/benchmark-report.md](https://github.com/sunrise-org/horizon/blob/main/docs/benchmark-report.md).
+[docs/benchmark-report.md](https://github.com/sunrise-org/sunrise/blob/main/docs/benchmark-report.md).
 
 **Share it.** Upload it from the launcher: `horizon-launcher data benchmark <the report's path>` shows exactly what
 would be sent, without your file paths, and asks before sending. Or allow benchmark uploads once
@@ -62,9 +62,9 @@ The latest bot benchmark compares `horizon-server` with vanilla 26.3, Paper and 
 - **Slow ticks:** from 10 players up, Sunrise's slowest ticks were the shortest of the four.
 - **50 players:** Sunrise and Paper kept 20 TPS. Fabric with Lithium dropped to 17, and vanilla's watchdog stopped it.
 
-For more than 50 active players, give it more cores. The full report is [benchmarks/server-four-way-2026-10-19](https://github.com/sunrise-org/horizon/blob/main/benchmarks/server-four-way-2026-10-19/README.md).
+For more than 50 active players, give it more cores. The full report is [benchmarks/server-four-way-2026-10-19](https://github.com/sunrise-org/sunrise/blob/main/benchmarks/server-four-way-2026-10-19/README.md).
 
 ## Where else to look
 
-- [Benchmark report format](https://github.com/sunrise-org/horizon/blob/main/docs/benchmark-report.md): what every benchmark writes.
-- `HORIZON_SPIKES=MS` prints what made every frame slower than that many milliseconds slow; it is described in [docs/graphics.md](https://github.com/sunrise-org/horizon/blob/main/docs/graphics.md#benchmark).
+- [Benchmark report format](https://github.com/sunrise-org/sunrise/blob/main/docs/benchmark-report.md): what every benchmark writes.
+- `HORIZON_SPIKES=MS` prints what made every frame slower than that many milliseconds slow; it is described in [docs/graphics.md](https://github.com/sunrise-org/sunrise/blob/main/docs/graphics.md#benchmark).

@@ -2,13 +2,16 @@
 
 Copy-paste blocks, from a plain cube to one that answers a right click. Replace `my_mod` with your mod id. New to blocks? [Build your first block](/docs/build-your-first-block) explains each file step by step.
 
-Every block here is a file in `data/my_mod/horizon/block/`. It **copies a vanilla block** (its `template`) and changes what differs. Your manifest needs `capabilities = ["registries"]`.
+Block declarations here are files in `data/my_mod/horizon/block/`. Each **copies a vanilla block** (its `template`) and changes what differs. Your `horizon-mod.toml` needs `capabilities = ["registries"]` and `side = "both"` for content shared by the server and its clients.
+
+> [!NOTE]
+> Checked against the mod API at [arismoko/horizon `de8b4e2`](https://github.com/arismoko/horizon/tree/de8b4e2526df9d7f611515b78123a26a3914176f), which Sunrise merges. The bell's Rust example was compile-checked against `horizon-mod-api`; these recipes were not run in game.
 
 ## A plain block
 
 **Status:** Works today.
 
-**You get:** `my_mod:ruby_block`, a block you can place, mine with a pickaxe, and craft.
+**You get:** `my_mod:ruby_block`, a block you can place, mine with a pickaxe, and give yourself with `/give`.
 
 **File:** `data/my_mod/horizon/block/ruby_block.json`
 
@@ -79,7 +82,7 @@ It still needs a loot table to drop itself: see [A block that drops itself](/doc
 { "template": "minecraft:glowstone", "properties": { "light": 15, "sounds": "minecraft:amethyst_block" } }
 ```
 
-- `light` is 0 to 15. 15 is a torch's or glowstone's brightness.
+- `light` is 0 to 15. 15 is glowstone's brightness; a torch emits 14.
 - `sounds` names a vanilla block whose sounds it uses.
 
 Add its blockstate, model, item model and name as in [A plain block](#a-plain-block).
@@ -106,7 +109,7 @@ Vanilla parents to start from:
 - `minecraft:block/cube_bottom_top`: `top`, `bottom` and `side`.
 - `minecraft:block/orientable`: a front face, like a furnace.
 
-Models use vanilla's resource pack format, so any model a resource pack can draw, with `elements`, works here.
+Models use vanilla's resource pack format, including cuboid geometry in `elements`.
 
 ## A block with its own shape
 
@@ -120,13 +123,13 @@ Models use vanilla's resource pack format, so any model a resource pack can draw
 {
   "template": "minecraft:stone",
   "shapes": { "default": [[0, 0, 0, 1, 0.5, 1]] },
-  "occludes": false
+  "properties": { "occludes": false }
 }
 ```
 
 - A box is `[minX, minY, minZ, maxX, maxY, maxZ]`, where 1 is a whole block. Up to 16 boxes.
 - `shapes` sets the outline. Collision follows it unless you also set `collision_shapes`.
-- `occludes: false` stops the block from hiding the faces beside it, so there is no hole in the floor next to it.
+- `occludes: false` inside `properties` stops the block from hiding the faces beside it, so there is no hole in the floor next to it.
 
 Give it a model of the same shape: the shape doesn't change how it is drawn.
 
@@ -164,7 +167,7 @@ Your blockstate file then picks a model per state, in vanilla's format:
 
 - Names and values are lower case letters, digits and `_`.
 - A name the template already has is refused.
-- All combinations together must stay under about a million states.
+- All combinations must fit in the world's 2^20 block-state space.
 
 ## A pipe or cable that connects
 
@@ -186,7 +189,7 @@ Your blockstate file then picks a model per state, in vanilla's format:
 
 `thickness` is 2 to 14 pixels. Without it, it is the chorus plant's 10.
 
-To make a post join fences instead, add it to `data/minecraft/tags/block/fences.json` and `wooden_fences.json`. [Connecting to fences, walls or panes](/docs/modding/how-to/content-mods#namespaces-and-limits) has the rules.
+To make a post join fences instead, add it to `data/minecraft/tags/block/fences.json` and `wooden_fences.json`. [Connecting to fences, walls or panes](/docs/modding/how-to/content-mods) has the rules.
 
 ## A fluid
 
@@ -201,10 +204,10 @@ To make a post join fences instead, add it to `data/minecraft/tags/block/fences.
 ```
 
 - `sprite` is a block texture: `assets/my_mod/textures/block/oil.png`.
-- `world` makes it exist in the world. Inside it: `tick_delay` (default 5), `drop_off` (1 to 7), `slope_find_distance` (1 to 4), `source_conversion` (default false) and `bucket` (default true).
+- `world` makes it exist in the world. Inside it: `tick_delay` (1 or more, default 5), `drop_off` (1 to 7), `slope_find_distance` (1 to 4), `source_conversion` (default false) and `bucket` (default true).
 - The bucket needs an item model, `assets/my_mod/items/oil_bucket.json`, as any item does.
 
-Details: [Making a content mod](/docs/modding/how-to/content-mods#content-mods-api-0-2).
+Details: [Making a content mod](/docs/modding/how-to/content-mods).
 
 ## A block that does something when right-clicked
 
@@ -218,7 +221,9 @@ Details: [Making a content mod](/docs/modding/how-to/content-mods#content-mods-a
 { "template": "minecraft:stone" }
 ```
 
-Add its blockstate, model and name as in [A plain block](#a-plain-block).
+Add its blockstate, model, item model and name as in [A plain block](#a-plain-block).
+
+Start with a [native mod project](/docs/modding/how-to/native-mods), keeping the manifest capability above.
 
 **File:** `src/lib.rs`
 
@@ -262,17 +267,17 @@ impl Hooks for Mod {
 **Common mistakes:**
 
 - Forgetting `#[mod_api::horizon_part]` on the `impl`: the method is never called.
-- Holding an item: `use_without_item` is for an empty hand. For a click with an item, use `use_item_on` on the same `BlockPart`.
+- Wanting to handle the item phase: use `use_item_on` on the same `BlockPart`. `use_without_item` runs only for the main hand after that phase returns `TryWithEmptyHand`.
 - The same works on a vanilla block: `r.block_key("minecraft:note_block")`.
 
-Other things a `BlockPart` can answer: redstone output, random ticks, neighbour changes, what stands on it, what it drops as experience. The list is in [Parts](/docs/modding/concepts/trait-mods/parts) and [Block Parts](/docs/modding/concepts/trait-mods/block-parts).
+Other things a `BlockPart` can answer: redstone output, random ticks, neighbour changes, what stands on it, what it drops as experience. The list is in [Parts](/docs/modding/concepts/parts) and [Block Parts](/docs/modding/concepts/parts/block-parts).
 
 ## A block that remembers something
 
-That needs a block entity. See [Block entities](/docs/recipes-block-entities).
+For saved data beyond block states, use a block entity. See [Block entities](/docs/recipes-block-entities).
 
 ## What isn't here yet
 
-- **A block class of your own** (Java's `extends Block`). **Not yet:** a block is always a copy of a vanilla template. **Workaround:** pick the closest template, then add behaviour with a `BlockPart`, as in the bell above.
-- **Every block property in code.** Blocks can also be declared from Rust with `Block::new(id, template)` in the `blocks` hook. The JSON files above are simpler and do the same: [Making a content mod](/docs/modding/how-to/content-mods).
+- **A block class of your own** (Java's `extends Block`). **Not through content declarations:** a declared block copies a vanilla template. **Workaround:** pick the closest template, then add behaviour with a `BlockPart`, as in the bell above.
+- **Declaring blocks from Rust.** Blocks can also be declared from Rust with `Block::new(id, template)` in the `blocks` hook. The JSON files above are simpler for these examples: [Making a content mod](/docs/modding/how-to/content-mods).
 - More gaps by area: [API gaps: blocks](/api-gaps#blocks).

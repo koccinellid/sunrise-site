@@ -10,8 +10,7 @@
   {"group": "Recipes", "section": "Modding", "pages": ["recipes", "recipes-blocks", "recipes-block-entities", "recipes-items", "recipes-entities", "recipes-crafting", "recipes-loot", "recipes-tags", "recipes-worldgen", "recipes-events", "recipes-commands", "recipes-menus", "recipes-sounds-particles", "recipes-networking", "recipes-saved-data"]},
   {"book": "modding", "section": "Modding", "parts": ["How-to"], "group": "How to do it"},
   {"group": "Ship it", "section": "Modding", "pages": ["test-a-mod", "publish-a-mod"]},
-  {"group": "Reference", "section": "Modding", "pages": ["mod-manifest", "mod-data"]},
-  {"group": "Legacy", "section": "Modding", "pages": ["what-changed", "legacy-native-mods", "legacy-bundle", "legacy-hook-points"]},
+  {"group": "Reference", "section": "Modding", "pages": ["mod-manifest", "mod-data", "what-changed"]},
   {"book": "modding", "section": "Modding"},
   {"group": "Overview", "section": "API", "pages": ["apis", "api", "api/stability"]},
   {"group": "Reference", "section": "API", "pages": ["api/mod-index", "api/server", "api/server-reference", "api/agent-control", "api/launcher", "api/data-formats", "api/shaders"]}

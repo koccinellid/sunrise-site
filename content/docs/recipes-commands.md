@@ -1,6 +1,6 @@
 # Recipes: commands
 
-Add slash commands to the game: a reply, arguments, operator-only commands, and a command that spawns a mob. The server checks permissions and parses the arguments for you; your code gets typed values.
+Add slash commands to Sunrise: a reply, arguments, operator-only commands, and a command that spawns a mob. The server checks permissions and parses the arguments for you; your code gets typed values.
 
 Every recipe here needs the Rust part of a mod: start with `cargo horizon-mod new my_mod --template native`, or add code to a mod you have ([Add code to your mod](/docs/mod-code)).
 
@@ -54,7 +54,7 @@ impl Hooks for Mod {
 
 **Status:** Works today.
 
-**You get:** `/heal <targets> [amount]`. `/heal @a` heals every player fully; `/heal Steve 4` heals 2 hearts.
+**You get:** `/heal <targets> [amount]`. `/heal @a` requests 20 health points for every selected player; `/heal Steve 4` requests 4 health points (2 hearts). Health stops at the maximum, and a `living_heal` listener can change or cancel the healing. Selectors such as `@a` need selector permission.
 
 ```rust
 fn register_commands(&self, _: &mut dyn ServerHost, event: &mut RegisterCommandsEvent<'_>) {
@@ -72,7 +72,7 @@ fn run_mod_command(&self, host: &mut dyn ServerHost, event: &mut RunModCommandEv
     };
     let amount = match event.command.argument("amount") {
         Some(CommandArgumentValue::Number(n)) => *n as f32,
-        _ => 20.0, // left out: full health
+        _ => 20.0, // left out: request 20 health points
     };
     let players = players.clone();
     for player in &players {
@@ -80,12 +80,12 @@ fn run_mod_command(&self, host: &mut dyn ServerHost, event: &mut RunModCommandEv
             let _ = living.heal(host, amount);
         }
     }
-    let _ = host.commands().feedback(Text::literal(format!("Healed {} players", players.len())));
+    let _ = host.commands().feedback(Text::literal(format!("Requested healing for {} players", players.len())));
     Flow::Cancel
 }
 ```
 
-The argument kinds, and what `argument(name)` gives you:
+Some argument kinds, and what `argument(name)` gives you:
 
 - `integer`: `CommandArgumentValue::Integer(i32)`.
 - `number`: `Number(f64)`, always finite.
@@ -110,7 +110,7 @@ event.commands.push(Command::op("ghoul", 2));
 
 `Command::op(usage, level)` needs operator level `level`: 2 is what `/give` and `/summon` need, 4 the server owner. `Command::new` is level 0, for everyone.
 
-Inside the command, `event.source.permission()` gives the runner's level, if you need finer checks.
+Inside the command, `event.source.permission()` gives the effective `PermissionLevel`, if you need finer checks.
 
 ## A command that spawns a mob
 
@@ -127,7 +127,7 @@ fn run_mod_command(&self, host: &mut dyn ServerHost, event: &mut RunModCommandEv
     if event.command.literals.first().map(String::as_str) != Some("ghoul") {
         return Flow::Continue;
     }
-    // Only a player has a place to spawn it.
+    // This recipe only spawns for a player.
     let CommandSource::Player { player, .. } = event.source else {
         let _ = host.commands().feedback(Text::literal("Run this as a player."));
         return Flow::Cancel;
@@ -150,7 +150,7 @@ fn run_mod_command(&self, host: &mut dyn ServerHost, event: &mut RunModCommandEv
 `event.source` says who:
 
 - `CommandSource::Player { player, .. }`: a player, with their `PlayerRef`.
-- `CommandSource::Console { .. }`: the server console. It has no position, so `@s` can't resolve there.
+- `CommandSource::Console { .. }`: the server console. It has no source entity, so `@s` can't resolve there. Its execution position is the Overworld spawn's block corner.
 - `CommandSource::CommandBlock { position, level, .. }` and `CommandBlockMinecart { entity, .. }`.
 - `CommandSource::Function { id, .. }`: a data pack function.
 
@@ -160,7 +160,7 @@ During the command, `host.players().acting_player()` also names the player who r
 
 **Status:** Works today.
 
-A value only your mod knows, such as a machine name, with its own suggestions: implement `CommandArgumentType` (`kind`, `parse`, `suggest`), register it in `register` with `r.register_command_argument("machine", Machine)`, and use it as `<machine:my_mod:machine>`. The complete example: [Custom argument types](/docs/modding/how-to/native-mods/typed-server-commands#custom-argument-types).
+A value only your mod knows, such as a machine name, with its own suggestions: implement `CommandArgumentType` (`kind`, `parse`, `suggest`), register it in `register` with `r.register_command_argument("machine", Machine)`, and use it as `<machine:my_mod:machine>`. The complete example: [Custom argument types](/docs/modding/how-to/entities/server-commands#custom-argument-types).
 
 Players whose client doesn't know your type can still type and complete the command.
 
@@ -168,14 +168,17 @@ Players whose client doesn't know your type can still type and complete the comm
 
 **Status:** Works today.
 
-A command that runs only on the player's own client (a HUD toggle, a local setting) is registered with the client hook `register_client_commands`, not `register_commands`. It never reaches the server.
+A command that runs only on the player's own client (a HUD toggle, a local setting) is registered with the client hook `register_client_commands`, not `register_commands`. Handle it in the client-side `command` hook with a `ClientHost`, not `run_mod_command`. A handled command never reaches the server. Use level 0; a client command with a nonzero level is left out.
 
 ## Commands that change while the game runs
 
-If the commands you register depend on a setting that changes, call `host.commands().refresh_commands()`. At the start of the next tick, every mod is asked again, and players get the new list.
+If the commands you register depend on a setting that changes, call `host.commands().refresh_commands()`. At the start of the next server tick, every mod is asked again, and players get the new list. Repeated requests coalesce; without a world open to players, nothing is rebuilt.
 
 ## Go deeper
 
-- Selectors, sources and permissions in full: [Typed server commands](/docs/modding/how-to/native-mods/typed-server-commands).
+- Selectors, sources and permissions in full: [Typed server commands](/docs/modding/how-to/entities/server-commands).
 - Running a vanilla command from code: `host.commands().run_command("time set day")` runs it as the console, with no output.
 - Gaps: [API gaps: commands](/api-gaps#commands).
+
+> [!NOTE]
+> Checked against the mod API at [arismoko/horizon `de8b4e2`](https://github.com/arismoko/horizon/tree/de8b4e2526df9d7f611515b78123a26a3914176f), which Sunrise merges. The hello, healing and mob-spawning Rust snippets were compile-checked against `horizon-mod-api`; they were not tested in game.

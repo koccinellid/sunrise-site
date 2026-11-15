@@ -11,7 +11,7 @@ Download the launcher, let it install Sunrise, then prepare the game from your o
 
 ## Download the launcher
 
-Get the newest launcher from the [Download button on the home page](/), which picks the right file for your system, or from [the launcher releases on GitHub](https://github.com/sunrise-org/horizon/releases?q=launcher&expanded=true).
+Get the newest launcher from the [Download button on the home page](/), which picks the right file for your system, or from [the launcher releases on GitHub](https://github.com/sunrise-org/sunrise/releases?q=launcher&expanded=true).
 
 ### Linux
 
@@ -69,7 +69,7 @@ The game opens on vanilla's title screen. Your worlds, options and logs live in 
 
 A launcher can only update itself where it is allowed to write. One opened from the disk image, a Mac app that was never moved out of Downloads (macOS runs it from a read-only copy), or a ZIP opened on Windows without extracting it finds every update and cannot put it in place. Launcher 0.2.41 and older say so only in **Settings**, next to the launcher's version ("the update failed: …"), so nothing on the home screen tells you that it is stuck on an old version. Newer ones say it in the sidebar, with **Download again**.
 
-Settings shows which launcher you have. If it is older than the newest [launcher release](https://github.com/sunrise-org/horizon/releases?q=launcher&expanded=true), download the launcher again from the home page and install it as described above: on macOS, drag it onto Applications and open it from there; on Windows, extract the ZIP first. Your instances, worlds and settings stay where they are, because they are not inside the launcher. You only do this once: from then on it updates itself.
+Settings shows which launcher you have. If it is older than the newest [launcher release](https://github.com/sunrise-org/sunrise/releases?q=launcher&expanded=true), download the launcher again from the home page and install it as described above: on macOS, drag it onto Applications and open it from there; on Windows, extract the ZIP first. Your instances, worlds and settings stay where they are, because they are not inside the launcher. You only do this once: from then on it updates itself.
 
 ## One version for everyone: the Nightly
 
@@ -79,7 +79,7 @@ Launchers from before this change still show a **Nightly builds** setting, or an
 
 ## The Versions page
 
-It lists Sunrise's builds, newest first: the current Nightly, the last week's, then the numbered releases from before. You can install a version, remove it, or choose which one **Play** starts. Each release's notes are on the **Patch notes** page, and on [GitHub](https://github.com/sunrise-org/horizon/releases).
+It lists Sunrise's builds, newest first: the current Nightly, the last week's, then the numbered releases from before. You can install a version, remove it, or choose which one **Play** starts. Each release's notes are on the **Patch notes** page, and on [GitHub](https://github.com/sunrise-org/sunrise/releases).
 
 ## Something went wrong
 

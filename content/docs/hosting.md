@@ -87,13 +87,13 @@ This works today, on a VPS or any computer. Everything below is the same program
 On Linux (x86-64) and macOS (Apple Silicon or Intel):
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/sunrise-org/horizon/main/packaging/server/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/sunrise-org/sunrise/main/packaging/server/install.sh | sh
 ```
 
 On Windows (x64), in PowerShell:
 
 ```powershell
-irm https://raw.githubusercontent.com/sunrise-org/horizon/main/packaging/server/install.ps1 | iex
+irm https://raw.githubusercontent.com/sunrise-org/sunrise/main/packaging/server/install.ps1 | iex
 ```
 
 The script downloads the latest release from GitHub, checks it against the SHA-256 GitHub publishes, and never asks for sudo or administrator rights. It puts `horizon-server` and `horizon-prepare` in `~/.local/bin` (on Windows, in your PATH). Other systems, such as Linux on ARM, build from source.
@@ -152,7 +152,7 @@ The server restarts the game by itself if it crashes. **Updates** never happen o
 - Settings in `server.toml` apply at the next restart, not live.
 - `console` (attach to a server running in the background) and `ban` and `pardon` as their own commands are coming. In the meantime, `horizon-server cmd ban NAME` works.
 
-The full reference, with every option, is [docs/hosting.md](https://github.com/sunrise-org/horizon/blob/main/docs/hosting.md) in the repository, and [docs/server.md](https://github.com/sunrise-org/horizon/blob/main/docs/server.md) explains the design.
+The full reference, with every option, is [docs/hosting.md](https://github.com/sunrise-org/sunrise/blob/main/docs/hosting.md) in the repository, and [docs/server.md](https://github.com/sunrise-org/sunrise/blob/main/docs/server.md) explains the design.
 
 ## How fast is it
 

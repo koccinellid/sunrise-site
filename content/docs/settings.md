@@ -53,7 +53,7 @@ Java Edition resource packs work. Put the folder or `.zip` in the `resourcepacks
 
 The launcher's **Mods** page can download them from Modrinth (see [Mods and data packs](/docs/mods#finding-resource-packs-and-modpacks)).
 
-[Resource packs: what works](https://github.com/sunrise-org/horizon/blob/main/docs/resource-packs.md) lists everything a 26.3 resource pack can change and whether Sunrise honours it.
+[Resource packs: what works](https://github.com/sunrise-org/sunrise/blob/main/docs/resource-packs.md) lists everything a 26.3 resource pack can change and whether Sunrise honours it.
 
 ## Controllers
 
