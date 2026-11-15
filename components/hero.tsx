@@ -2,7 +2,7 @@ import Image from "next/image";
 import type { CSSProperties } from "react";
 import { HorizonScene } from "@/components/horizon-scene";
 import { AppleIcon, DownloadIcon, GitHubIcon, LinuxIcon, RustIcon, WindowsIcon } from "@/components/icons";
-import { getLauncherDownloads, getReleases, launcherBuild } from "@/components/github-releases";
+import { getLauncherDownloads, getLauncherRelease, launcherBuild } from "@/components/github-releases";
 import { format, getMessages, NUMBER_LOCALE, rich, type Locale } from "@/components/i18n";
 import { LauncherLink, LauncherMeta } from "@/components/launcher-download";
 import { GITHUB_URL, RUST_WIKI_URL } from "@/components/links";
@@ -20,8 +20,8 @@ function Dot({ className = "mx-2" }: { className?: string }) {
 export async function Hero({ locale }: { locale: Locale }) {
   const { home } = getMessages(locale);
   const t = home.hero;
-  const [releases, downloads] = await Promise.all([getReleases(), getLauncherDownloads()]);
-  const launcher = launcherBuild(releases);
+  const [release, downloads] = await Promise.all([getLauncherRelease(), getLauncherDownloads()]);
+  const launcher = launcherBuild(release);
   return (
     <section className="relative isolate flex min-h-svh flex-col overflow-hidden">
       <HorizonScene className="absolute inset-0 -z-10" />

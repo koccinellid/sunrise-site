@@ -15,33 +15,27 @@ Get the newest launcher from the [Download button on the home page](/), which pi
 
 ### Linux
 
-1. Download `horizon-launcher-linux-x86_64.tar.gz`.
-2. Extract it.
-3. Run `horizon-launcher`.
+1. Download `sunrise-launcher-linux-x86_64.AppImage` from [the download page](/download).
+2. Make it executable (`chmod +x sunrise-launcher-linux-x86_64.AppImage`) and run it.
+
+`sunrise-launcher-linux-x86_64.tar.gz` holds the same launcher: extract it and run `sunrise-launcher`.
 
 ### macOS
 
-1. Download the right disk image:
-   - `horizon-launcher-macos-arm64.dmg` for Apple Silicon (M1 or newer).
-   - `horizon-launcher-macos-x64.dmg` for an Intel Mac.
-   - Not sure? Apple menu, **About This Mac**: "Chip" means Apple Silicon, "Processor" means Intel.
-2. Open it and drag Sunrise onto **Applications**.
-3. Open Sunrise from Applications, not from the disk image.
-4. The first time, macOS says it cannot check the app, because it is not signed with a paid Apple developer account:
-   - **macOS 14 and earlier:** right-click Sunrise, choose **Open**, then **Open** again.
-   - **macOS 15 and later:** open it once, then go to **System Settings, Privacy & Security** and choose **Open Anyway**.
+Not every launcher release has a macOS build. When it has one, [the download page](/download) offers `sunrise-launcher-macos-arm64.dmg`, for Apple Silicon (M1 or newer); there is no build for Intel Macs.
 
-After that it opens normally.
+1. Open the disk image and drag the launcher onto **Applications**, then open it from there.
+2. It isn't notarized by Apple, so macOS says it can't check it: open it once, then go to **System Settings, Privacy & Security** and choose **Open Anyway**.
 
 ### Windows
 
-1. Download `horizon-launcher-setup.exe` and run it. On a Windows on ARM PC, such as a Snapdragon laptop, `horizon-launcher-setup-arm64.exe` runs natively; the x64 one works there too.
+1. Download `sunrise-launcher-setup.exe` from [the download page](/download) and run it. It is not code-signed yet, so Windows SmartScreen may stop it: choose **More info**, then **Run anyway**.
 2. It installs the launcher for your account, with no administrator needed, and adds a Start menu shortcut.
 
 The launcher updates itself from there. **Apps & features** removes it.
 
 > [!TIP] Rather not install it?
-> `horizon-launcher-windows-x64.zip` holds the same launcher. Extract it first (right-click, **Extract All**), then run `horizon-launcher.exe` from the extracted folder. Run from inside the ZIP, Windows uses a temporary copy it throws away.
+> `sunrise-launcher-windows-x64.zip` holds the same launcher. Extract it first (right-click, **Extract All**), then run `sunrise-launcher.exe` from the extracted folder. Run from inside the ZIP, Windows uses a temporary copy it throws away.
 
 Every release also carries `SHA256SUMS` and a signature, `SHA256SUMS.sig`, if you want to check your download. The launcher does not check that signature for you yet.
 
