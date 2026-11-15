@@ -21,7 +21,7 @@ The full pages, one per surface, with their references: [the API portal](/docs/a
 - **Preview**: documented and tested. It may change at a new line (0.1 to 0.2), after a deprecation of at least 30 days during which old and new both work.
 - **Experimental**: opt-in only, and it may change in any release.
 
-Every API has its own version (the native hook points are version 1, the server's control API is `/api/v1`), separate from the game's release number. The whole policy: [stability and versioning](https://github.com/sunrise-org/horizon/blob/main/docs/api/stability.md).
+Every API has its own version (the native hook points are version 1, the server's control API is `/api/v1`), separate from the game's release number. The whole policy: [stability and versioning](https://github.com/sunrise-org/sunrise/blob/main/docs/api/stability.md).
 
 ## How they are designed
 

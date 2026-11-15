@@ -36,7 +36,7 @@ The launcher's **Settings** page has a **Logs** row with an **Open** button. On 
 
 ## Reporting a bug
 
-Report it in **GitHub issues**: [github.com/sunrise-org/horizon/issues](https://github.com/sunrise-org/horizon/issues). Search first; someone may have reported it already.
+Report it in **GitHub issues**: [github.com/sunrise-org/sunrise/issues](https://github.com/sunrise-org/sunrise/issues). Search first; someone may have reported it already.
 
 Include:
 

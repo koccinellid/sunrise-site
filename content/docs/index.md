@@ -16,7 +16,7 @@ Sunrise is Minecraft: Java Edition 26.3, rewritten in Rust. It is a community fo
 **Sunrise** is a community fork of Horizon. It exists for two reasons:
 
 - **Easier development.** The team develops and tests changes together, in one shared place.
-- **Earlier features.** Work that is still in development, such as Ari's typed mod API, reaches players and mod makers sooner.
+- **Earlier features.** Work that is still in development, such as the typed mod API, reaches players and mod makers sooner.
 
 Sunrise keeps Horizon's rule: wherever vanilla has a feature, vanilla is the specification.
 
@@ -24,7 +24,7 @@ Sunrise keeps Horizon's rule: wherever vanilla has a feature, vanilla is the spe
 
 Sunrise is made by its team: **Umut, Xmilon, Juan Luci, Ari, levzzz, Isloka** and others, with every contributor who sends a pull request.
 
-- **Ari** leads the mod API. The modding guides here follow Ari's repository, [arismoko/horizon](https://github.com/arismoko/horizon).
+- **Ari** leads the mod API, which came to Sunrise from [arismoko/horizon](https://github.com/arismoko/horizon). The modding guides here follow it.
 - **This website** is made by **Xmilon and Umut**.
 
 The whole team is listed at the bottom of this page.

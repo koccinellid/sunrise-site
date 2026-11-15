@@ -12,7 +12,7 @@ No. It is not an official Minecraft product, and it is not approved by or associ
 
 ## Is Sunrise the same as Minecraft Rust Edition?
 
-"Minecraft Rust Edition" is a name some players use for Sunrise, because Sunrise is Minecraft: Java Edition rewritten in Rust. It is not an edition made by Mojang or Microsoft. Other projects use the name too, including a fork of Sunrise. The original is the one on this site, with its source at [sunrise-org/horizon](https://github.com/sunrise-org/horizon). See [What is Sunrise?](/docs).
+"Minecraft Rust Edition" is a name some players use for Sunrise, because Sunrise is Minecraft: Java Edition rewritten in Rust. It is not an edition made by Mojang or Microsoft. Other projects use the name too, including a fork of Sunrise. The original is the one on this site, with its source at [sunrise-org/horizon](https://github.com/sunrise-org/sunrise). See [What is Sunrise?](/docs).
 
 ## Will my Forge, NeoForge or Fabric mods work?
 

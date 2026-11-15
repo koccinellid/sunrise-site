@@ -38,10 +38,10 @@ A release is published only when:
 
 ## Why it is safe to run
 
-- **Open source.** All of the code is public on [GitHub](https://github.com/sunrise-org/horizon), under the MIT licence.
-- **Built from the public code.** Releases are built by GitHub Actions from the public source. Every build log is [public](https://github.com/sunrise-org/horizon/actions/workflows/release.yml).
+- **Open source.** All of the code is public on [GitHub](https://github.com/sunrise-org/sunrise), under the MIT licence.
+- **Built from the public code.** Releases are built by GitHub Actions from the public source. Every build log is [public](https://github.com/sunrise-org/sunrise/actions/workflows/release.yml).
 - **Signed checksums.** Every release has `SHA256SUMS`, a fingerprint of each download, and `SHA256SUMS.sig`, a signature of that list made with Sunrise's release key. The launcher and `horizon-server update` check both before they install anything.
-- **Mods are off until you choose them.** A mod with code can do anything you can on your computer, so the launcher builds it only after a warning that names it, into a game of its own. See [Mods](/docs/mods).
+- **Mods are off until you choose them.** A mod with code can do anything you can on your computer, so the launcher builds it only on an install where you allowed native code, after a trust notice, and only for the instance it is installed in. See [Mods](/docs/mods).
 - **Nothing collected unless you say yes.** Each kind of data has its own switch, all off by default. The one exception is an anonymous "I'm playing" ping for the player count. See [Privacy](/privacy).
 
 > [!WARNING] Not signed by Apple or Microsoft yet
@@ -50,11 +50,11 @@ A release is published only when:
 ## What it does not contain
 
 - **No Minecraft files.** Sunrise never ships or downloads Minecraft code, assets or data. The launcher builds the game files on your computer from your own copy of 26.3. A check on every pull request (`tools/check_public_tree.py`) keeps game files out of the repository.
-- **No code from other mods.** Since 24 October 2026, the code may only be written from Minecraft 26.3 itself and public documentation, never from another mod, loader or renderer ([the rule](https://github.com/sunrise-org/horizon/blob/main/CONTRIBUTING.md#only-original-code)). That day shader packs were removed ([#1561](https://github.com/sunrise-org/horizon/pull/1561)) after a developer of Iris showed the code had been written from Iris's source. They are being written again from a description of the pack format only.
+- **No code from other mods.** Since 24 October 2026, the code may only be written from Minecraft 26.3 itself and public documentation, never from another mod, loader or renderer ([the rule](https://github.com/sunrise-org/sunrise/blob/main/CONTRIBUTING.md#only-original-code-or-code-whose-license-allows-it)). That day shader packs were removed ([#1561](https://github.com/sunrise-org/sunrise/pull/1561)) after a developer of Iris showed the code had been written from Iris's source. They are being written again from a description of the pack format only.
 
 ## Check it yourself
 
-1. **Read the code.** [The source](https://github.com/sunrise-org/horizon), [the checks on every pull request](https://github.com/sunrise-org/horizon/actions/workflows/ci.yml) and [the release builds](https://github.com/sunrise-org/horizon/actions/workflows/release.yml).
+1. **Read the code.** [The source](https://github.com/sunrise-org/sunrise), [the checks on every pull request](https://github.com/sunrise-org/sunrise/actions/workflows/ci.yml) and [the release builds](https://github.com/sunrise-org/sunrise/actions/workflows/release.yml).
 2. **Compare the fingerprints.** Put a release's files and its `SHA256SUMS` in one folder, open a terminal there and run the line for your system. Each file should say `OK`.
 
    ```sh
@@ -74,4 +74,4 @@ A release is published only when:
 
    The public key is in `crates/horizon-release-sign/release-keys.txt`.
 
-4. **Build it yourself.** The README explains how to [build from source](https://github.com/sunrise-org/horizon#build-from-source).
+4. **Build it yourself.** The README explains how to [build from source](https://github.com/sunrise-org/sunrise#build-from-source).
