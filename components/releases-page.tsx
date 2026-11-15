@@ -1,5 +1,6 @@
 import type { CSSProperties } from "react";
 import { getReleases, RELEASES_URL, type Release, type ReleaseKind } from "@/components/github-releases";
+import { GAME_REPO } from "@/components/game-repo";
 import { HorizonScene } from "@/components/horizon-scene";
 import { format, getMessages, NUMBER_LOCALE, rich, type Locale, type Messages } from "@/components/i18n";
 import { DownloadIcon, ExternalLinkIcon, GitHubIcon, MoonIcon } from "@/components/icons";
@@ -133,7 +134,7 @@ export async function ReleasesPage({ locale }: { locale: Locale }) {
               <Dot />
               <span className="inline-flex items-center gap-2">
                 <GitHubIcon className="size-3.5" />
-                sunrise-org/horizon
+                {GAME_REPO}
               </span>
             </p>
             <h1

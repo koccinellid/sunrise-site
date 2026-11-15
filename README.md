@@ -28,7 +28,7 @@ The site includes the `/perf` viewer, capture sharing and upload API. See [docs/
 ## Layout
 
 ```
-app/                    the routes: /, /hub, /mods, /mods/<id>, /mods/submit, /mods/mine, /mods/policy, /releases,
+app/                    the routes: /, /hub, /mods, /mods/<id>, /mods/submit, /mods/mine, /mods/policy, /releases, /download,
                         /stats, /docs, /docs/<page>, /privacy, /apply, /api-gaps, and the staff's
                         pages inside the hub: /hub/team, /hub/mod, /hub/sign-in, /hub/setup, /hub/staff-help
                         (the old /staff/* addresses redirect there; /hub/mod has a Cases tab: Kira's numbered mod
@@ -66,7 +66,7 @@ The `/docs/api/*` pages come from `docs/api/` in the game's repository, read fro
   each loader's own `cacheLife` applies, as before.
 - **Through Kira**: `components/github-api.ts` sends the REST reads to `GITHUB_PROXY_URL` (Kira's allowlisted proxy),
   so revalidating on every change doesn't run into the 60 requests an hour this host gets without a token.
-- **The game's branch**: `GAME_REPO` (`sunrise-org/horizon`) at `GAME_REF` (`release/sunrise`), both in
+- **The game's branch**: `GAME_REPO` (`sunrise-org/sunrise`) at `GAME_REF` (`release/sunrise`), both in
   `components/game-repo.ts` and overridable by the environment: `README.md` (parity numbers), `roadmap/roadmap.json` (the hub),
   `docs/api/*.md`, `docs/telemetry.md` and `LICENSE`. A file missing on that branch shows the page's fallback, never a build error.
 - **The mod registry**: the index at sunrise-org.github.io/horizon-mods, ratings and submissions through
@@ -97,7 +97,7 @@ Railway service variables:
 | `TELEMETRY_URL` | Optional, defaults to `https://telemetry.playsunrise.net` |
 | `KIRA_URL` | Optional, Kira's address for `/api/market`; defaults to `https://kira-production-500e.up.railway.app` |
 | `SITE_URL` | Optional, defaults to `https://playsunrise.net`; used for canonical links, the sitemap and share cards |
-| `GAME_REPO`, `GAME_REF` | Optional, default `sunrise-org/horizon` and `release/sunrise`: the game's repository and branch the site reads (for development) |
+| `GAME_REPO`, `GAME_REF` | Optional, default `sunrise-org/sunrise` and `release/sunrise`: the game's repository and branch the site reads (for development) |
 
 Release view counts live in `.data/`, which is reset by every deploy unless a volume is mounted at `/app/.data`.
 
