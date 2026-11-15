@@ -11,7 +11,7 @@ export const WINDOWS_URL = "/docs/install#download-the-launcher";
 export const LINUX_URL = "/docs/install#download-the-launcher";
 export const CONTRIBUTORS_URL = "#contributors";
 // The Sunrise Discord invite; while it is empty every Discord link and button is hidden.
-export const DISCORD_URL = "";
+export const DISCORD_URL = "https://discord.gg/eswQcHfRKC";
 export const BUILD_URL = "/docs/how-sunrise-is-built";
 export const RUST_WIKI_URL =
   "https://en.wikipedia.org/wiki/Rust_(programming_language)";
