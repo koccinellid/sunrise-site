@@ -2,19 +2,19 @@
 
 Copy-paste items: a gem, a food, a sword, a pickaxe, a seed, a throwable, and items with code. Replace `my_mod` with your mod id.
 
-Every item is a file in `data/my_mod/horizon/item/`. It **copies a vanilla item** (its `template`) and changes what differs. Your manifest needs `capabilities = ["registries"]`.
+Every content item here is a file in `data/my_mod/horizon/item/`. It **copies a vanilla item** (its `template`) and changes what differs. Your manifest needs `capabilities = ["registries"]`.
 
 ## How item data works
 
 - An item keeps all of its template's **data components**: food, durability, damage, tool rules.
 - `components` changes them, in vanilla 26.3's data component format: `"minecraft:<type>": value` sets one, `"!minecraft:<type>": {}` removes one.
-- A component type no vanilla item has is refused, so a typo stops the mod from loading instead of doing nothing.
+- An unknown component type is refused, so a typo stops the mod from loading instead of doing nothing. Code mods can register additional component types.
 
 ## A plain item
 
 **Status:** Works today.
 
-**You get:** `my_mod:ruby`, a gem with a blue name.
+**You get:** `my_mod:ruby`, a gem with a yellow name.
 
 **File:** `data/my_mod/horizon/item/ruby.json`
 
@@ -49,7 +49,7 @@ Every item is a file in `data/my_mod/horizon/item/`. It **copies a vanilla item*
 
 **Common mistakes:**
 
-- An item with no `assets/my_mod/items/<name>.json` shows as a missing texture. Since 1.21.4 every item needs this file.
+- Supply `assets/my_mod/items/<name>.json` as well as the model and texture so the item has a model to draw.
 - A tool or sword uses `minecraft:item/handheld` instead of `item/generated`, so it is held like a tool.
 
 ## A food
@@ -77,7 +77,7 @@ Every item is a file in `data/my_mod/horizon/item/`. It **copies a vanilla item*
 }
 ```
 
-- `nutrition` is half-shanks of the hunger bar. `saturation` is how long it lasts.
+- `nutrition` is half-shanks of the hunger bar. `saturation` is the saturation points restored, capped by the current food level.
 - `duration` is in ticks: 20 a second.
 - For a plain food, copy `minecraft:cooked_beef` and set only `minecraft:food`.
 
@@ -133,9 +133,9 @@ Every item is a file in `data/my_mod/horizon/item/`. It **copies a vanilla item*
 }
 ```
 
-The rules are read in order: the first rule that matches a block wins. Iron's pickaxe has speed 6.0, diamond's 8.0.
+Speed and drop correctness are read separately: for each, the first matching rule that supplies that field wins.
 
-Enchanting tables and anvils find tools by item tags. Add yours to `data/minecraft/tags/item/pickaxes.json`, as vanilla's are: `{ "values": ["my_mod:ruby_pickaxe"] }`. See [Tags](/docs/recipes-tags).
+Add your pickaxe to the item tag `data/minecraft/tags/item/pickaxes.json`, alongside vanilla's: `{ "values": ["my_mod:ruby_pickaxe"] }`. See [Tags](/docs/recipes-tags).
 
 ## A seed that plants a block
 
@@ -152,11 +152,11 @@ Enchanting tables and anvils find tools by item tags. Add yours to `data/minecra
 - `block` is the block it places: yours or vanilla's. It keeps that block's placement rules, and is used up outside creative.
 - For farmers to plant them, add them to `data/minecraft/tags/item/villager_plantable_seeds.json`.
 
-For the crop itself, copy `minecraft:wheat` as its template, and see `random_ticks` in [Making a content mod](/docs/modding/how-to/content-mods#content-mods-api-0-2).
+For the crop itself, copy `minecraft:wheat` as its template, and see `random_ticks` in [Making a content mod](/docs/modding/how-to/content-mods).
 
 ## A throwable item
 
-**Status:** Partly. It works in single player and on LAN. Dispensers don't throw it yet, and dedicated servers are untested.
+**Status:** Works in single player, on LAN and on dedicated servers with the same mods. Dispensers don't throw it.
 
 **You get:** an ember you throw like a snowball. It deals 2 damage to what it hits.
 
@@ -176,7 +176,7 @@ For the crop itself, copy `minecraft:wheat` as its template, and see `random_tic
 - One entity type per item. `damage` is 0 by default.
 - Name the entity in `en_us.json`: `"entity.my_mod.ember": "Ember"`.
 
-From code, `host.spawn_projectile_from_rotation(...)` launches one without an item. See [Making a content mod](/docs/modding/how-to/content-mods#content-mods-api-0-2).
+From code, `host.spawn_projectile_from_rotation(owner, &entity_type, &stack, offset, power, inaccuracy)` launches one without consuming an item. See [Making a content mod](/docs/modding/how-to/content-mods).
 
 ## An item that does something on right click
 
@@ -204,8 +204,11 @@ struct Wand {
 
 #[mod_api::horizon_part]
 impl ItemPart for Wand {
-    // The player right-clicks a block with the wand. Server-side.
-    fn use_on(&self, host: &mut dyn ServerHost, event: &mut UseOnEvent<'_>) -> Flow {
+    // Both sides answer; only the server sends particles and sound.
+    fn use_on(&self, host: HostSide, event: &mut UseOnEvent<'_>) -> Option<InteractionResult> {
+        let HostSide::Server(host) = host else {
+            return Some(InteractionResult::Success);
+        };
         let [x, y, z] = event.pos;
         let above = [x as f64 + 0.5, y as f64 + 1.2, z as f64 + 0.5];
         let dimension = host.dimension();
@@ -217,8 +220,8 @@ impl ItemPart for Wand {
         if let Some(player) = host.player(event.player) {
             player.entity().play_sound(host, "minecraft:block.amethyst_block.chime", 1.0, 1.0);
         }
-        // Cancel: the click is taken, and the item's own use doesn't run.
-        Flow::Cancel
+        // Consume the click without running the item's own use.
+        Some(InteractionResult::Consume)
     }
 }
 
@@ -236,12 +239,12 @@ impl Hooks for Mod {
 
 Other `ItemPart` methods:
 
-- `use_item`: right click in the air (it runs on both sides, so its host is a `HostSide`).
+- `use_item`: right click in the air, or after an unhandled block or entity interaction (it runs on both sides, so its host is a `HostSide`).
 - `hurt_enemy`: the item hits a mob.
-- `inventory_tick`: each tick while it is in an inventory.
+- `inventory_tick`: each server tick while a living player carries the stack.
 - `use_duration`, `release_using`: items you hold down, like a bow.
 
-All of them: [Item and tag Parts](/docs/modding/concepts/trait-mods/item-and-tag-parts). To attach a Part to every item in a tag, such as all axes, use `r.item_part_tag("minecraft:axes", Part)`.
+All of them: [Item and tag Parts](/docs/modding/concepts/parts/item-and-tag-parts). To attach a Part to every item in a tag, such as all axes, use `r.item_part_tag("minecraft:axes", Part)`.
 
 ## A tooltip line
 
@@ -254,7 +257,7 @@ Add this method to the `ItemPart` above:
 ```rust
 // Client-side, each frame the tooltip shows.
 fn tooltip(&self, _: &dyn ClientHost, event: &mut TooltipEvent<'_>) {
-    // (text, colour as 0xAARRGGBB); u32::MAX keeps the text's own colour.
+    // (text, colour as 0xAABBGGRR); u32::MAX keeps the text's own colour.
     event.lines.push((Text::literal("Right-click a block"), 0xFFAAAAAA));
 }
 ```
@@ -263,6 +266,9 @@ Use `Text::translate("tooltip.my_mod.wand", vec![])` and a line in `en_us.json` 
 
 ## What isn't here yet
 
-- **Behaviour tied to a vanilla item's class.** **Not yet:** a copy of the trident doesn't throw, and a copy of the bow doesn't draw ([#3305](https://github.com/horizon-rust/horizon/issues/3305)). Components carry over; code-only behaviour doesn't. Fishing rods are the exception: a `minecraft:fishing_rod` copy works. **Workaround:** give the item `ItemPart` methods for the behaviour you need, as the wand does.
-- **Putting your items in vanilla's creative tabs** needs code: the `build_creative_mode_tab_contents` hook. A tab of your own needs only a file, `data/my_mod/horizon/creative_tab/<name>.json`: `{ "title": "Ruby", "icon": "my_mod:ruby", "items": ["my_mod:ruby", "my_mod:ruby_block"] }`. Details: [Making a content mod](/docs/modding/how-to/content-mods#content-mods-api-0-2).
+- **Behaviour tied to a vanilla item's class.** **Not yet:** a copy of the trident doesn't throw, and a copy of the bow doesn't draw. Components carry over; code-only behaviour doesn't. Fishing rods are the exception: a `minecraft:fishing_rod` copy works. **Workaround:** give the item `ItemPart` methods for the behaviour you need, as the wand does.
+- **Putting your items in vanilla's creative tabs** needs code: the client-side `build_creative_mode_tab_contents` hook. A tab of your own needs only a file, `data/my_mod/horizon/creative_tab/<name>.json`: `{ "title": "Ruby", "icon": "my_mod:ruby", "items": ["my_mod:ruby", "my_mod:ruby_block"] }`. Details: [Making a content mod](/docs/modding/how-to/content-mods).
 - More gaps: [API gaps: items](/api-gaps#items).
+
+> [!NOTE]
+> Checked against the mod API at [arismoko/horizon `de8b4e2`](https://github.com/arismoko/horizon/tree/de8b4e2526df9d7f611515b78123a26a3914176f), which Sunrise merges. The wand and tooltip Rust snippets were checked against the source, but not compiled: the attempted check was stopped while waiting for the shared build lock. These recipes were not tried in game.

@@ -4,17 +4,17 @@ Put things on the player's screen: a container menu, a screen you draw yourself 
 
 Every recipe here needs the Rust part of a mod: start with `cargo horizon-mod new my_mod --template native`, or add code to a mod you have ([Add code to your mod](/docs/mod-code)).
 
-> [!NOTE] Checked against `bfbda6a`
-> Every hook, type and file path below was checked against Ari's repository at commit `bfbda6a`. The snippets were checked against the API's declarations, not compiled one by one.
+> [!NOTE] Checked against `de8b4e2`
+> Checked against the mod API at [arismoko/horizon `de8b4e2`](https://github.com/arismoko/horizon/tree/de8b4e2526df9d7f611515b78123a26a3914176f), which Sunrise merges. The Rust examples below were compile-checked together in one mod crate against `horizon-mod-api`; they were not tried in game.
 
 ## Where menus come from
 
-In Sunrise a menu belongs to a **block entity**. There are two kinds:
+For a block menu in Sunrise, start with a **block entity**. There are two kinds:
 
 - **A vanilla menu** (chest, dispenser, hopper, furnace): you pick it, the game draws it.
 - **A menu type of your own**: you say how many slots it has, and you draw its screen.
 
-Both start from a block with a block entity. If you haven't made one, read [Block entities](/docs/recipes-block-entities) first.
+Both block-menu recipes start from a block with a block entity; the server can also open menus without a block, as below. If you haven't made one, read [Block entities](/docs/recipes-block-entities) first.
 
 ## A chest-style storage menu
 
@@ -22,11 +22,11 @@ Both start from a block with a block entity. If you haven't made one, read [Bloc
 
 **You get:** a block that opens vanilla's 3 × 3 dispenser menu, with 9 slots saved in the world.
 
-This is the [storage block recipe](/docs/recipes-block-entities#a-storage-block-with-a-menu). The short version: answer `block_entity_container` with a `ModContainer` whose `menu` is a vanilla menu id, such as `"minecraft:generic_9x3"`, and whose `slots` matches that menu.
+This is the [storage block recipe](/docs/recipes-block-entities#a-storage-block-with-a-menu). The short version: register a `ModContainer` with `r.block_container(&block, container)` in `register`, where `block` is the `BlockKey` from `r.block_key("my_mod:storage")`. Set its `menu` to `Some("minecraft:generic_3x3".into())` and its `slots` to 9 for the dispenser layout.
 
 ## A machine with its own screen, a progress bar and a button
 
-**Status:** Partly. It works for players on Sunrise (Horizon) clients. Other clients get nothing when they open it, and clicks are not predicted on the client yet.
+**Status:** Partly. It works for players on Sunrise clients. Clients without support for the mod menu type are not sent that menu.
 
 **You get:** a "press" block with 2 slots. Its screen draws a progress bar that fills as the block ticks, and a red square you click to reset it.
 
@@ -75,7 +75,7 @@ impl BlockEntityPart for Press {
     // Each tick: move the progress on, and copy it into the menu's data slot.
     fn block_entity_tick(&self, _: &mut dyn ServerHost, event: &mut BlockEntityTickEvent<'_>) {
         let progress = match event.entity.nbt.get(&"progress".into()) {
-            Some(Tag::Int(n)) => (*n + 1).min(100),
+            Some(Tag::Int(n)) => n.saturating_add(1).min(100),
             _ => 0,
         };
         event.entity.nbt.insert("progress".into(), Tag::Int(progress));
@@ -123,23 +123,16 @@ impl BlockEntityPart for Press {
 #[mod_api::horizon_mod]
 impl Hooks for Mod {
     fn register(&self, r: &mut dyn Registrar, _: &RegistrationContext) {
-        let kind = r.block_entity_type("press").blocks(&[PRESS]).build();
-        r.block_entity_part(&kind, Press).expect("native block entity type");
-    }
-
-    // The block's slots, and the menu type that shows them.
-    fn block_entity_container(
-        &self,
-        _: &dyn Host,
-        event: &mut BlockEntityContainerEvent<'_>,
-    ) -> Option<ModContainer> {
-        (event.block == PRESS).then(|| ModContainer {
+        let block = r.block_key(PRESS);
+        r.block_container(&block, ModContainer {
             slots: 2,
             faces: std::array::from_fn(|_| vec![0, 1]),
             inputs: vec![0],
             outputs: vec![1],
             menu: Some("my_mod:press".into()),
-        })
+        });
+        let kind = r.block_entity_type("press").blocks(&[PRESS]).build();
+        r.block_entity_part(&kind, Press).expect("native block entity type");
     }
 }
 ```
@@ -150,7 +143,7 @@ What runs where:
 - `screen_draw` and `screen_click` run on the **client**. They only draw and ask.
 - `screen` runs on **both**: the server uses it to know which slots exist.
 
-**Try it:** build into your test instance, place the press, right-click it. The bar fills over 5 seconds. Click the red square: it empties.
+**Try it:** build into your test instance, place the press, right-click it. The bar fills to 100 as the block ticks. Click the red square: it empties.
 
 **Common mistakes:**
 
@@ -163,7 +156,7 @@ What runs where:
 > [!TIP] Draw a texture instead of boxes
 > `event.draw.sprite("my_mod:gui/press", src, dst, None)` draws part of a GUI sprite. Set `own_background: true` in `Screen` to draw the whole background yourself. The complete working example is the machine in [horizon-machine-sample](https://github.com/arismoko/horizon-machine-sample).
 
-More: [Menu types](/docs/modding/how-to/content-mods#menu-types), [A menu's slots](/docs/modding/concepts/trait-mods/a-menus-slots), [Declaring a machine's menu data](/docs/modding/how-to/block-entities).
+More: [Menu types](/docs/modding/how-to/content-mods#menu-types), [A menu's slots](/docs/modding/concepts/capabilities/menu-slots), [Declaring a machine's menu data](/docs/modding/how-to/world/machine-menu-data).
 
 ## A HUD element of your own
 
@@ -208,7 +201,7 @@ impl Hooks for Mod {
 
 - Colours are `0xAARRGGBB`. `0xFF` at the front means opaque.
 - Rectangles are `[x, y, width, height]` in GUI pixels.
-- `GuiLayerPlacement` is `BelowAll`, `Below(id)`, `Above(id)` or `AboveAll`. Vanilla's layer ids: `minecraft:crosshair`, `hotbar`, `effects`, `boss_overlay`, `vehicle_health`, `contextual_info_bar`, `player_health`, `selected_item_name`, `sleep_overlay`, `overlay_message`, `title`, `scoreboard_sidebar`, `subtitle_overlay`, `chat`, `tab_list`.
+- `GuiLayerPlacement` is `BelowAll`, `Below(id)`, `Above(id)` or `AboveAll`. Vanilla's layer ids (each uses the `minecraft:` prefix): `crosshair`, `hotbar`, `effects`, `boss_overlay`, `vehicle_health`, `contextual_info_bar`, `player_health`, `selected_item_name`, `sleep_overlay`, `overlay_message`, `title`, `scoreboard_sidebar`, `subtitle_overlay`, `chat`, `tab_list`.
 
 **Try it:** build, open a world: the bar sits above the hotbar. Press F1: it hides with the rest of the HUD.
 
@@ -225,7 +218,7 @@ impl Hooks for Mod {
 
 **Status:** Works today.
 
-**You get:** no vanilla health, armor and food rows. Draw your own in their place if you like.
+**You get:** no vanilla health, armor, food and air rows. Draw your own in their place if you like.
 
 ```rust
 fn gui_layer_pre(&self, _: &dyn ClientHost, event: &mut GuiLayerPreEvent<'_>) -> Flow {
@@ -243,7 +236,7 @@ fn gui_layer_pre(&self, _: &dyn ClientHost, event: &mut GuiLayerPreEvent<'_>) ->
 
 **Status:** Works today.
 
-`render_gui_post` runs after the whole HUD is drawn, with `event.draw` and `event.corners`, which stacks boxes so several mods don't overlap in the same corner. Use it for an info box; use a GUI layer (above) for anything that must sit among vanilla's layers. Details: [the hook notes](/docs/modding/reference/hook-notes).
+`render_gui_post` runs after the whole HUD is drawn, with `event.draw` and `event.corners`, which stacks boxes so several mods don't overlap in the same corner. Use it for an info box; use a GUI layer (above) for anything that must sit among vanilla's layers. Details: [HUD drawing](/docs/modding/how-to/client/hud-drawing).
 
 ## A screen with no block behind it
 
@@ -334,9 +327,11 @@ impl Hooks for Mod {
 
 ```rust
 use mod_api::*;
-use std::sync::OnceLock;
+use std::collections::HashMap;
+use std::sync::{LazyLock, Mutex, OnceLock};
 
 static DIAMOND: OnceLock<ItemKey> = OnceLock::new();
+static WINDOWS: LazyLock<Mutex<HashMap<u128, i32>>> = LazyLock::new(Default::default);
 
 #[derive(Default)]
 struct Mod;
@@ -361,17 +356,31 @@ impl Hooks for Mod {
         let uuid = player.uuid();
         let items = vec![None, None, None, None, DIAMOND.get().map(|key| ItemStack::of(*key))];
         // 1 row, a title, the items by slot.
-        let _ = host.open_menu(uuid, 1, Text::literal("Warps"), items);
+        if let Ok(Some(window)) = host.open_menu(
+            uuid, 1, Text::literal("Warps"), items, MenuReplace::CloseFirst,
+        ) {
+            WINDOWS.lock().unwrap().insert(uuid, window);
+        }
         Flow::Cancel
     }
 
     // A click in a menu a mod opened. It moves nothing: you decide what happens.
     fn menu_clicked(&self, host: &mut dyn ServerHost, event: &mut MenuClickedEvent) {
+        if WINDOWS.lock().unwrap().get(&event.uuid) != Some(&event.window) {
+            return;
+        }
         if event.slot == 4 {
             if let Some(player) = host.player(event.uuid) {
                 let _ = player.tell(host, Text::literal("You picked the diamond"));
             }
             host.close_menu(event.uuid);
+        }
+    }
+
+    fn menu_closed(&self, _: &mut dyn ServerHost, event: &mut MenuClosedEvent) {
+        let mut windows = WINDOWS.lock().unwrap();
+        if windows.get(&event.uuid) == Some(&event.window) {
+            windows.remove(&event.uuid);
         }
     }
 }
@@ -381,12 +390,11 @@ impl Hooks for Mod {
 
 **Common mistakes:**
 
-- Assuming `menu_clicked` is only for your menu: it fires for every menu any mod opened. Remember the window id `open_menu` returns if you open more than one.
+- Assuming `menu_clicked` is only for your menu: it fires for every menu any mod opened. Track the window id returned by `open_menu` and check it before handling a click, as above.
 - `rows` must be 1 to 6. Missing slots are padded with empty ones.
 
 ## What isn't here yet
 
-- **Screens on non-Horizon clients.** A mod menu type shows nothing on them.
-- **Client-predicted clicks** in mod menus: each click waits for the server.
-- **A Java-style `Screen` class** with widgets. You draw with `fill`, `sprite`, `text` and `item`, and handle clicks yourself.
+- **Mod menu types on unsupported clients.** A client without support for the type is not sent one.
+- **A Java-style `Screen` subclass.** Use the screen hooks to draw and handle input. There are Rust `Button`, `TextField` and `Widgets` helpers in `mod_api::client::widgets`; this page uses manual drawing and clicks.
 - More gaps: [API gaps: GUI](/api-gaps#gui).

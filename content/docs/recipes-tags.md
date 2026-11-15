@@ -4,21 +4,21 @@ Copy-paste tags: put your blocks and items in vanilla's tags, make tags of your 
 
 A **tag** is a named list of blocks, items, fluids or biomes. Vanilla uses them everywhere: which pickaxe mines what, what counts as a log, which biomes a village spawns in. Tags are **vanilla 26.3 data pack files**, inside your mod's folder and its one `.hmod`.
 
-> [!NOTE] Checked against `bfbda6a`
-> Every file format and API on this page was checked against the source of Ari's repository at commit `bfbda6a`.
+> [!NOTE] Checked against `de8b4e2`
+> Checked against the mod API at [arismoko/horizon `de8b4e2`](https://github.com/arismoko/horizon/tree/de8b4e2526df9d7f611515b78123a26a3914176f), which Sunrise merges. Rust snippets were compile-checked against `horizon-mod-api`; they were not tried in game.
 
 ## Where tag files go
 
 - **Your own tags:** `data/my_mod/tags/<kind>/<name>.json` is the tag `my_mod:<name>`.
-- **Vanilla's tags:** `data/minecraft/tags/<kind>/...`. Tags are the only files a mod may put under `minecraft`.
+- **Vanilla's tags:** `data/minecraft/tags/<kind>/...`. Under `minecraft`, a mod may add tags and `assets/minecraft/atlases/` files, but no other content.
 - **Convention tags**, shared by NeoForge and Fabric mods: `data/c/tags/<kind>/...`.
-- `<kind>` is `block`, `item`, `fluid`, `entity_type` or `worldgen/biome`, as in vanilla.
+- Examples of `<kind>` are `block`, `item`, `fluid`, `entity_type` and `worldgen/biome`, as in vanilla.
 
 ## Add your block to a vanilla tag
 
 **Status:** Works today.
 
-**You get:** a pickaxe mines `my_mod:ruby_block` fast, and only iron or better makes it drop.
+**You get:** `my_mod:ruby_block` added to vanilla's `mineable/pickaxe` and `needs_iron_tool` tags. Tags alone do not define the block's loot table or its `requires_tool` property.
 
 **File:** `data/minecraft/tags/block/mineable/pickaxe.json`
 
@@ -41,7 +41,7 @@ Your file **adds** to vanilla's tag and to other mods' files for it. It doesn't 
 - `tags/blocks/` (old name). Since 1.21 the folder is `tags/block/`, and `tags/item/`.
 - An id written with `#` in `values` names a tag, not a block: `"#minecraft:logs"` puts every log in.
 
-Other useful vanilla tags: `minecraft:logs` and `minecraft:planks` for blocks, `minecraft:pickaxes` and `minecraft:swords` for tools (enchanting tables and anvils read them), `minecraft:fences` and `minecraft:walls` for blocks that connect ([A pipe or cable](/docs/recipes-blocks#a-pipe-or-cable-that-connects)).
+Other useful vanilla tags: `minecraft:logs` and `minecraft:planks` for blocks, `minecraft:pickaxes` and `minecraft:swords` for tools, `minecraft:fences` and `minecraft:walls` for blocks that connect ([A pipe or cable](/docs/recipes-blocks#a-pipe-or-cable-that-connects)).
 
 ## A tag of your own
 
@@ -111,7 +111,7 @@ Details: [Namespaces and limits](/docs/modding/how-to/content-mods#namespaces-an
 }
 ```
 
-A file left out this way leaves the tag's other entries alone. Details: [Conditional data](/docs/modding/how-to/native-mods/conditional-data).
+A file left out this way leaves the tag's other entries alone. Details: [Conditional data](/docs/modding/how-to/items/conditional-data).
 
 ## Check a tag from code
 
@@ -141,7 +141,7 @@ impl BlockPart for GemSocket {
         let tags = host.tags();
         // Resolve the tag's name to a key. Keep the key if you check often.
         let gems = tags.key(&Identifier::parse("c:gems").ok()?)?;
-        // None: the tags aren't loaded yet. Some(false): not in the tag.
+        // None: tags or item mappings unavailable. Some(false): not in the tag.
         if tags.is_in_tag(stack.item(), gems) != Some(true) {
             return None;
         }
@@ -167,7 +167,7 @@ For blocks and fluids there are shorter calls on `host`:
 - `host.block_in_tag(block, "minecraft:logs")` takes a `BlockKey`.
 - `host.fluid_in_tag("minecraft:water", "minecraft:water")` takes a fluid's name.
 
-Both answer `None` before the world's tags are loaded. On a client they read the tags the server sent.
+Both answer `None` when the world's tags or the required mappings are unavailable. On a client they read the tags the server sent.
 
 **Try it:** build the code into a test instance (`horizon-launcher native-build . --instance Development --trust-native-code`), then right-click the block holding a ruby and holding dirt.
 
@@ -180,13 +180,13 @@ Both answer `None` before the world's tags are loaded. On a client they read the
 
 **Status:** Works today, with Rust code.
 
-`host.level_biome_in_tag(level, "minecraft:plains", "minecraft:is_forest")` says whether a biome is in a biome tag, without loading chunks. A biome tag of your own is a file in `data/my_mod/tags/worldgen/biome/`. Details: [Check biome tags](/docs/modding/how-to/check-biome-tags).
+`level.biome_in_tag(host, "minecraft:plains", "minecraft:is_forest")` says whether a biome is in a biome tag, without loading chunks. A biome tag of your own is a file in `data/my_mod/tags/worldgen/biome/`. Details: [Check biome tags](/docs/modding/how-to/world/check-biome-tags).
 
 ## Inside a loot function
 
 **Status:** Works today, with Rust code.
 
-The `loot_function` and `loot_condition` hooks get the tags as `event.tags`, the same service as `host.tags()`:
+The server-side `loot_function` and `loot_condition` hooks get the tags as `event.tags`, the same read-only service as `host.tags()`, but no Host. Add this method to your `#[mod_api::horizon_mod] impl Hooks`:
 
 ```rust
 fn loot_condition(&self, event: &mut LootConditionEvent<'_>) {
@@ -205,7 +205,7 @@ fn loot_condition(&self, event: &mut LootConditionEvent<'_>) {
 }
 ```
 
-The loot hooks themselves: [Loot tables](/docs/recipes-loot#a-loot-condition-of-your-own). Details: [Reading tags in custom loot](/docs/modding/how-to/loot-tags).
+The loot hooks themselves: [Loot tables](/docs/recipes-loot#a-loot-condition-of-your-own). Details: [Reading tags in custom loot](/docs/modding/how-to/items/loot-tags).
 
 ## What isn't here yet
 

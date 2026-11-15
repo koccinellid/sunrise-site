@@ -2,10 +2,10 @@
 
 Copy-paste world generation: an ore, taking a vanilla feature out, changing a biome's weather and colours, a biome of your own, a dimension, and a house in vanilla's villages. Replace `my_mod` with your mod id.
 
-World generation uses **vanilla 26.3's worldgen files** and **NeoForge's biome modifier files**, inside your mod's folder and its one `.hmod`. A dimension of your own takes a few lines of Rust in the same mod.
+World generation uses **vanilla 26.3's worldgen files** and **NeoForge's biome modifier files**, inside your mod's folder and its one `.hmod`, with one `horizon-mod.toml`. A dimension of your own takes a few lines of Rust in the same mod.
 
-> [!NOTE] Checked against `bfbda6a`
-> Every file format and API on this page was checked against the source of Ari's repository at commit `bfbda6a`.
+> [!NOTE] Source check
+> Checked against the mod API at [arismoko/horizon `de8b4e2`](https://github.com/arismoko/horizon/tree/de8b4e2526df9d7f611515b78123a26a3914176f), which Sunrise merges. The dimension registration Rust snippet was compile-checked against `horizon-mod-api`; the JSON examples were checked against the source, not run in game.
 
 ## How worldgen files work
 
@@ -21,11 +21,11 @@ World generation uses **vanilla 26.3's worldgen files** and **NeoForge's biome m
 
 **Status:** Works today.
 
-**You get:** ruby ore in stone, 40 tries per chunk between y = -32 and y = 48, in every Overworld biome.
+**You get:** ruby ore in stone, 40 tries per chunk with starting heights between y = -32 and y = 48, in biomes tagged `minecraft:is_overworld`.
 
 First make the ore block itself: [A plain block](/docs/recipes-blocks#a-plain-block) with `"template": "minecraft:iron_ore"`, and [its drops](/docs/recipes-loot#an-ore-with-fortune-and-silk-touch).
 
-**File:** `data/my_mod/worldgen/feature/ore_ruby.json` (what: a blob of up to 9 blocks)
+**File:** `data/my_mod/worldgen/feature/ore_ruby.json` (what: an ore blob with size 9)
 
 ```json
 {
@@ -73,7 +73,7 @@ First make the ore block itself: [A plain block](/docs/recipes-blocks#a-plain-bl
 - A second target with `"tag": "minecraft:deepslate_ore_replaceables"` and a deepslate ore block puts a deepslate form below.
 - `biomes` is an id, a `#tag` or a list of ids. `features` is an id or a list.
 
-**Try it:** `cargo horizon-mod build`, start the game, create a new world. `/place feature my_mod:ore_ruby` places one blob where you stand.
+**Try it:** `cargo horizon-mod build`, copy `target/horizon-mod/my_mod.hmod` into your game folder's `horizon-mods/`, start Sunrise, and create a new world. `/place feature my_mod:ore_ruby` places one blob where you stand.
 
 **Common mistakes:**
 
@@ -85,7 +85,7 @@ First make the ore block itself: [A plain block](/docs/recipes-blocks#a-plain-bl
 
 **Status:** Works today.
 
-**You get:** no more diamond ore in the Overworld.
+**You get:** the two listed diamond ore placements removed from Overworld biomes, not a guarantee that every diamond placement is gone.
 
 **File:** `data/my_mod/neoforge/biome_modifier/no_diamonds.json`
 
@@ -120,9 +120,10 @@ First make the ore block itself: [A plain block](/docs/recipes-blocks#a-plain-bl
 ```
 
 - You can set `temperature`, `downfall`, `has_precipitation`, `temperature_modifier` (`none` or `frozen`) and the `effects` colours: `sky_color`, `fog_color`, `water_color`, `water_fog_color`, `foliage_color`, `dry_foliage_color`, `grass_color`.
-- A colour is a number up to `0xFFFFFF` (16777215) or `"#rrggbb"`.
+- A colour is an integer from 0 to `0xFFFFFF` (16777215) or `"#rrggbb"`.
 - `null` for `foliage_color`, `dry_foliage_color` or `grass_color` removes that override, so the colour map tints it again.
 - An `attributes` object also changes ambient particles, sounds and music.
+- In Rust, `Registrar::declare_biome_modifier(path, modifier)` declares a `BiomeModifier` with the same operations. Declared modifiers apply when a world loads, just like files.
 
 > [!NOTE] Sunrise's own type
 > `horizon:modify_biome` is not a NeoForge type. NeoForge's own modifiers only add and remove. A modifier with a bad value is skipped with a warning naming your mod and file.
@@ -159,20 +160,20 @@ Use this as the modifier's `biomes`:
 
 ## A biome of your own
 
-**Status:** Partly. The biome loads. It shows up only where a dimension or worldgen file of yours uses it: not among the Overworld's biomes yet.
+**Status:** Works today. The biome loads; a dimension's biome source, a worldgen file or a biome region must choose it for it to appear.
 
 **You get:** the biome `my_mod:ruby_fields`, for your own dimension below.
 
 **File:** `data/my_mod/worldgen/biome/ruby_fields.json`
 
-Copy a vanilla biome file, such as `minecraft:plains` from the game's prepared data, to this path, then change what differs. The format is vanilla 26.3's.
+Copy a vanilla biome object, such as the `minecraft:plains` entry in the game's prepared `worldgen/biomes.json`, into this file, then change what differs. The format is vanilla 26.3's.
 
-- Any namespace but `minecraft` works. Vanilla's biome ids never move.
+- Use a namespace owned by your manifest, not `minecraft`. Vanilla's biome ids never move.
 - A client joining a server gets the biome's data from the server, colours and sounds included.
 - A world saved with the mod and opened without it reads your biome as plains.
 
-> [!NOTE] Not yet: your biome in the Overworld
-> Placing a mod's biome among the Overworld's or the Nether's is a design note, not code ([#2554](https://github.com/arismoko/horizon/issues/2554), [design](/docs/modding/concepts/mod-biome-regions)). **Workaround:** a dimension of your own, as below, whose biome source picks your biome.
+> [!NOTE] Your biome in the Overworld or Nether
+> A Rust mod can call `Registrar::declare_biome_region(path, region)` at registration to put its biomes among vanilla's. A `BiomeRegion` names `minecraft:overworld` or `minecraft:nether`, a weight from 1 to 1000 against vanilla's 10, and climate points. Existing worlds keep their saved regions until the owner opts in. See [Biome regions](/docs/modding/how-to/content-mods/biome-regions).
 
 ## A dimension of your own
 
@@ -213,7 +214,7 @@ impl Hooks for Mod {
 
 **Common mistake:** a bad build height, a vanilla dimension's name or the same id twice stops the mods at startup, with the reason naming your mod.
 
-Details, and how to read a level's shape from code: [Dimension shape](/docs/modding/how-to/native-mods/dimension-shape).
+Details, and how to read a level's shape from code: [Dimension shape](/docs/modding/how-to/world/dimension-shape).
 
 ## A house in vanilla's villages
 
@@ -243,14 +244,12 @@ Details, and how to read a level's shape from code: [Dimension shape](/docs/modd
 - `horizon:add_to` appends your elements to a pool you don't own. This file is not a pool itself.
 - `location` names your structure file: `data/my_mod/structure/village/plains/ruby_house.nbt`, saved with a structure block.
 - Structure sets and processor lists take additions the same way, with `"structures"` or `"processors"`.
+- NeoForge structure spawn modifiers also work: `data/my_mod/neoforge/structure_modifier/` reads `neoforge:add_spawns`, `neoforge:remove_spawns` and `neoforge:clear_spawns` for the named `structures`.
 
 Details: [Namespaces and limits](/docs/modding/how-to/content-mods#namespaces-and-limits).
 
 ## What isn't here yet
 
-- **Your biome among the Overworld's or the Nether's.** **Not yet** ([#2554](https://github.com/arismoko/horizon/issues/2554)). **Workaround:** a dimension of your own.
-- **Features and placement rules written in code** (Java's `Feature` subclasses). **Not yet** ([#815](https://github.com/arismoko/horizon/issues/815), [design](/docs/modding/concepts/worldgen-features)). **Workaround:** combine vanilla's feature types in JSON.
-- **Biome modifiers declared in code** (`Registrar::declare_biome_modifier`). **Partly:** the API checks them, but the game doesn't apply them yet ([#2732](https://github.com/arismoko/horizon/issues/2732)). **Workaround:** ship the same modifier as a file.
-- **NeoForge's structure modifiers.** **Not yet** ([#1269](https://github.com/arismoko/horizon/issues/1269)).
+- **Features and placement rules written in code** (Java's `Feature` subclasses). There is no `Feature` registration interface in this mod API. **Workaround:** combine vanilla's feature types in JSON.
 - **Your own `placed_feature` tags in a modifier's `features`.** **Not yet:** only vanilla's tags are read. **Workaround:** list the features by id.
-- All biome calls and files in one place: [Biomes](/docs/modding/how-to/biomes). More gaps: [API gaps](/api-gaps).
+- All biome calls and files in one place: [Biomes](/docs/modding/how-to/world/biomes).

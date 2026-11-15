@@ -2,6 +2,9 @@
 
 Make Glowing Amethyst: a block that gives light, can be crafted, and drops itself when mined with a pickaxe. Then add an item of your own. No code, only small JSON files, each explained.
 
+> [!NOTE] API checked
+> Checked against the mod API at [arismoko/horizon `de8b4e2`](https://github.com/arismoko/horizon/tree/de8b4e2526df9d7f611515b78123a26a3914176f), which Sunrise merges. This page has no Rust snippets to compile; the JSON and commands were checked against the source, not run in the game.
+
 ## Before you start
 
 - You have done the [quickstart](/docs/make-a-mod): Rust and `cargo horizon-mod` are installed.
@@ -52,11 +55,11 @@ side = "both"
 capabilities = ["registries"]
 ```
 
-- `id` is the namespace of everything the mod adds.
+- `id` is the mod's default namespace. This tutorial puts all its new content there.
 - `name` is what players see on the Mods screen.
 - `version` goes up each time you publish.
-- `api = "0.2"` is the format version. Always `"0.2"` today.
-- `side = "both"` means the mod matters on the server too, as any mod that adds blocks does.
+- `api = "0.2"` selects the content API version. It must be `"0.2"` for this API.
+- `side = "both"` means joining clients and the server must have the same mod id and version. A mod that adds blocks needs this setting.
 - `capabilities = ["registries"]` lets the mod add blocks and items.
 
 **Try it:** fill in `description` and `authors`, for example `authors = ["Your name"]`.
@@ -74,7 +77,7 @@ capabilities = ["registries"]
 
 - The path makes the block `sunrise_example:glowing_amethyst`.
 - `template` copies vanilla's amethyst block: its sounds, states and shape.
-- `hardness` is how long it takes to mine.
+- `hardness` helps determine how long it takes to mine; the tool matters too.
 - `light` is the light it gives, from 0 to 15. Here, 7.
 
 The block also gets an item of the same id, so you can hold it.
@@ -161,7 +164,7 @@ The key is `block.<mod id>.<block name>`. The value is the name players read.
 }
 ```
 
-This adds your block to vanilla's "mineable with a pickaxe" tag, so a pickaxe mines it fast. It is the one file under `minecraft`: a mod may add to vanilla's tags, never change vanilla's other files.
+This adds your block to vanilla's "mineable with a pickaxe" tag, so a pickaxe mines it fast. It is the one file under `minecraft`: a mod may add to vanilla's tags and atlases, but not replace its other files.
 
 ## Step 7: Its recipe
 
@@ -188,7 +191,7 @@ cargo horizon-mod build
 cargo horizon-mod check target/horizon-mod/sunrise_example.hmod
 ```
 
-- `build` checks every file as the game will, then writes `target/horizon-mod/sunrise_example.hmod`.
+- `build` validates the content with the same checks the game uses, then writes `target/horizon-mod/sunrise_example.hmod`.
 - `check` reads that file as the mod registry would. It answers like this:
 
 ```text
@@ -252,7 +255,7 @@ In the block file, set `"light": 15`, vanilla's brightest.
 
 ### Add an item
 
-A ruby gem, copying vanilla's diamond. Four files:
+A ruby gem, copying vanilla's diamond. Three new JSON files, a texture and one extra name:
 
 **File:** `data/sunrise_example/horizon/item/ruby.json`
 

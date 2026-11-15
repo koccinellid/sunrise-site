@@ -2,9 +2,12 @@
 
 The few ideas behind every Sunrise mod: one file, ids and namespaces, registries, and when each part of a mod runs. Read this once and the rest of the guides make sense.
 
+> [!NOTE]
+> Checked against the mod API at [arismoko/horizon `de8b4e2`](https://github.com/arismoko/horizon/tree/de8b4e2526df9d7f611515b78123a26a3914176f), which Sunrise merges. This page has no Rust snippets to compile.
+
 ## A mod is one folder, then one file
 
-While you work, your mod is a **folder**. When you share it, it is one **`.hmod` file**: a zip of that folder.
+While you work, your mod is a **folder**. When you share it, it is one **`.hmod` file**: a zip containing the mod's manifest, content and code, not your build cache.
 
 ```text
 my_mod/
@@ -13,25 +16,26 @@ my_mod/
 ├── assets/my_mod/       how things look: models, textures, names
 ├── data/my_mod/         what things are: blocks, items, recipes, loot
 ├── Cargo.toml           only if the mod has Rust code
-└── src/lib.rs           only if the mod has Rust code
+├── src/lib.rs           only if the mod has Rust code
+└── mod.wasm             for a wasm mod, produced by the wasm build
 ```
 
-`cargo horizon-mod build` packs it into `target/horizon-mod/my_mod.hmod`. Inside, the file has the same layout as the folder.
+`cargo horizon-mod build` packs it into `target/horizon-mod/my_mod.hmod`. The packaged files keep their paths relative to the mod folder. Use `cargo horizon-mod build --wasm` to compile and package the wasm module; plain `build` does not compile Rust.
 
 ## Data and code live in the same file
 
-There is no "kind" of mod to choose. A mod holds the parts it needs:
+There is no separate package format to choose. A mod holds the parts it needs:
 
 - **Data and assets** (`data/`, `assets/`) add blocks, items, recipes and the rest. The game reads them when it starts. Nothing compiles.
 - **Rust code** (`Cargo.toml`, `src/`) reacts to things that happen in the game: a player joins, a block breaks, a key is pressed.
 - **Both together** is normal. A machine mod has its block in `data/` and its behaviour in `src/lib.rs`, in one folder, one manifest and one `.hmod`.
 
-> [!NOTE] Before, these were two files
-> Older Sunrise builds shipped data and code as two separate files, each with its own manifest and tool. That is gone: today one `.hmod` holds both. The old way is kept under [Legacy](/docs/what-changed) for people who maintain an old mod.
+> [!NOTE] Have an old mod?
+> Older mod systems do not apply to this API. See [What changed](/docs/what-changed).
 
 ## Ids and namespaces
 
-Everything in Minecraft has an **id** with two parts: `namespace:name`.
+Registered content in Minecraft has an **id** with two parts: `namespace:name`.
 
 - `minecraft:stone` is vanilla's stone. Its namespace is `minecraft`.
 - `my_mod:glowing_amethyst` is your block. Its namespace is your **mod id**, `my_mod`.
@@ -64,19 +68,19 @@ and the file says what the block copies from vanilla:
 { "template": "minecraft:amethyst_block", "properties": { "light": 7 } }
 ```
 
-- `template` is a vanilla block. Yours behaves like it: same states, same shape.
+- `template` is a vanilla block. Yours inherits its states and shape unless you declare overrides.
 - `properties` changes what differs. Here, it gives light.
 
-**Your manifest asks for permission to do this:**
+**Your manifest declares this capability:**
 
 ```toml
 capabilities = ["registries"]
 ```
 
-The game's Mods screen shows it to players as "May add blocks, items, mob effects and entity types to your worlds".
+This is the required capability list for the shared mod manifest.
 
 > [!TIP] "Registry" has a second meaning
-> The **mod registry** is something else: the list of published mods at [playsunrise.net/mods](/mods), which the launcher installs from. When these pages say "the registry checks your file", they mean that one.
+> The **mod registry** is something else: the index of published mod packages that the launcher reads. When these pages say "the registry checks your file", they mean that one.
 
 ## Where each file goes
 
@@ -99,13 +103,13 @@ The path of a file says what it is. Replace `my_mod` with your mod id.
 - A texture: `assets/my_mod/textures/block/<name>.png`
 - The names players see: `assets/my_mod/lang/en_us.json`
 
-Everything except the files under `horizon/` uses vanilla's data pack and resource pack formats. [Blocks, items and data files](/docs/mod-data) has every field.
+These recipes, loot tables, tags and assets use vanilla's data pack and resource pack formats. The declarations under `data/my_mod/horizon/` are Sunrise's content format. [Blocks, items and data files](/docs/mod-data) has the details.
 
 ## When each part runs
 
-- **Data and assets** load once, when the game starts. After you change a file, start the game again.
-- **Rust code** is compiled into the game by the launcher, for one instance only, after a warning: native code can do anything you can on your computer.
-- **The same Rust built to `mod.wasm`** runs in the game's sandbox instead, with no rebuild of the game.
+- **Data and assets** load when the game starts. After you change a file, rebuild the package and start the game again.
+- **Native Rust code** is compiled by Sunrise's launcher against the pinned prebuilt game, after a trust notice. The game itself is not rebuilt. Native code can do anything you can on your computer.
+- **Rust written against the mod API and built to `mod.wasm`** runs in the game's sandbox instead, using the shared-memory Wire layout, with no rebuild of the game. Game-code changes through `[[native.mixin]]`, `[[native.bridge]]`, `[[native.module]]` and `[[native.loop]]` are native only.
 
 ## Next
 

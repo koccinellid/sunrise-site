@@ -24,28 +24,32 @@ The [status table](/#parity) shows what the harnesses covered when the project s
 
 ## The new mod system
 
-This is the biggest change Sunrise brings. It comes from Ari's mod API.
+This is the biggest change Sunrise brings. It is Sunrise's mod API.
 
 **One mod is one file.** Every mod ships as a single `.hmod` file, whatever it holds:
 
-- **Data:** blocks, items, recipes, loot tables, tags, models, textures and names.
+- **Data:** blocks, items, recipes, loot tables, tags, models, textures and names in `assets/` and `data/`.
 - **Code:** Rust that hooks into the game, such as a HUD, a command or a new behaviour.
-- **Both at once,** in the same folder, with one manifest.
+- **Both at once,** in the same package, with one `horizon-mod.toml` manifest.
 
-**How this differs from the old system:**
+**Code has two build targets, using the same mod API:**
 
-| Before | Now |
+| Target | How it runs |
 | --- | --- |
-| Data and code were two separate files | One `.hmod` holds both |
-| Two manifests, two tools | One `horizon-mod.toml`, one tool: `cargo horizon-mod` |
-| Code patched into the game by hand-written helpers | Typed hooks: the compiler checks what your code may call |
+| Native | The launcher compiles the mod's Rust crate against the pinned prebuilt game on the player's machine |
+| WebAssembly | The game runs `mod.wasm`, built from the same Rust, in a sandbox |
 
-[How a mod works](/docs/how-mods-work) explains the new system. Old mods are covered under [Legacy](/docs/what-changed).
+`cargo horizon-mod` packages the mod. Typed hooks let the compiler check what your code may call.
+
+[How a mod works](/docs/how-mods-work) explains the new system. Have an older mod? [Older systems do not apply](/docs/what-changed).
+
+> [!NOTE]
+> This section was checked against the mod API at [arismoko/horizon `de8b4e2`](https://github.com/arismoko/horizon/tree/de8b4e2526df9d7f611515b78123a26a3914176f), which Sunrise merges. There are no Rust snippets on this page to compile.
 
 ## What Sunrise is not
 
 - **Not Minecraft itself.** It contains no Minecraft code, assets or data, and never downloads them. You need your own copy of Minecraft: Java Edition 26.3.
-- **Not a Java mod loader.** Forge, NeoForge, Fabric and Quilt jars do not run, and neither do Mixins. The launcher can carry over some Java mods' data. See [Mods](/docs/mods) and [Modpacks](/docs/modpacks).
+- **Not a Java mod loader.** Forge, NeoForge, Fabric and Quilt jars do not run, and neither do Java Mixins. The launcher can carry over some Java mods' data. See [Mods](/docs/mods) and [Modpacks](/docs/modpacks).
 - **Not for other versions.** It plays 26.3. Worlds from 1.8 to 26.2 are upgraded the way vanilla upgrades them.
 - **Not official.** It is not approved by or associated with Mojang or Microsoft.
 

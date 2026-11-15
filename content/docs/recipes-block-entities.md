@@ -1,8 +1,11 @@
 # Recipes: block entities
 
-A **block entity** is extra data that lives in one placed block: a chest's items, a furnace's progress, a sign's text. Java modders call these "entity blocks". In Sunrise you add one with a little Rust beside your block's JSON, all in the same mod.
+A **block entity** is extra data that lives in one placed block: a chest's items, a furnace's progress, a sign's text. In Sunrise you add one with a little Rust beside your block's JSON, all in the same mod.
 
 Every recipe here needs the Rust part of a mod: start with `cargo horizon-mod new my_mod --template native`, or add the code to a mod you have ([Add code to your mod](/docs/mod-code)).
+
+> [!NOTE]
+> Checked against the mod API at [arismoko/horizon `de8b4e2`](https://github.com/arismoko/horizon/tree/de8b4e2526df9d7f611515b78123a26a3914176f), which Sunrise merges. The counter, generator, crate and screen Rust examples below were compile-checked against `horizon-mod-api`; they were not run in game.
 
 ## The three steps every block entity takes
 
@@ -21,13 +24,13 @@ r.block_entity_part(&kind, Counter).expect("native block entity type");
 - A type can't own a `minecraft:` block, and two types can't share a block. The game refuses it when it starts.
 - The Part implements **both** `BlockPart` and `BlockEntityPart`, each with `#[mod_api::horizon_part]`, even when one is empty.
 
-More: [Block entity types](/docs/modding/concepts/trait-mods/block-entity-types).
+More: [Block entity types](/docs/modding/concepts/parts/block-entity-types).
 
 ## A block that remembers a number
 
 **Status:** Works today.
 
-**You get:** a counter block. Each right click adds one and tells you the total. The number is saved with the world.
+**You get:** a counter block. Right-click it with an empty hand to add one and see the total, up to the maximum `i32` value. The number is saved with the world.
 
 **File:** `data/my_mod/horizon/block/counter.json`
 
@@ -62,12 +65,14 @@ impl BlockPart for Counter {
         // Read the saved number, add one, write it back.
         let data = entity.data(host).unwrap_or_default();
         let presses = match data.get(&"presses".into()) {
-            Some(Tag::Int(n)) => *n + 1,
+            Some(Tag::Int(n)) => n.saturating_add(1),
             _ => 1,
         };
         let mut update = Compound::new();
         update.insert("presses".into(), Tag::Int(presses));
-        let _ = entity.merge_data(host, update);
+        if entity.merge_data(host, update).is_err() {
+            return None;
+        }
 
         if let Some(player) = host.player(event.click.player) {
             let _ = player.tell(host, Text::literal(format!("Pressed {presses} times")));
@@ -89,7 +94,7 @@ impl Hooks for Mod {
 }
 ```
 
-**Try it:** build into your test instance, place the block, right-click it a few times, leave the world and come back: the count goes on.
+**Try it:** build into your test instance, place the block, right-click it a few times with an empty hand, leave the world and come back: the count goes on.
 
 **Common mistakes:**
 
@@ -135,7 +140,7 @@ impl BlockEntityPart for Generator {
             Some(Tag::Int(n)) => *n,
             _ => 0,
         };
-        event.entity.nbt.insert("energy".into(), Tag::Int((energy + 1).min(1000)));
+        event.entity.nbt.insert("energy".into(), Tag::Int(energy.saturating_add(1).min(1000)));
     }
 }
 
@@ -154,14 +159,14 @@ In `block_entity_tick`, `event.entity` has three things you can change:
 - `items`: its item slots, if it has a container. Keep the count the same.
 - `data`: numbers its menu shows, such as a progress arrow. Not saved.
 
-**Try it:** give `Generator` the `use_without_item` from [the counter](#a-block-that-remembers-a-number), reading `energy` instead of `presses`, and right-click it now and then: the number grows.
+**Try it:** give `Generator` the `use_without_item` from [the counter](#a-block-that-remembers-a-number), reading `energy` instead of `presses` without incrementing or writing it, and right-click it now and then: the number grows.
 
 > [!WARNING] Don't set `ticks` to false
 > `ticks` may already be true from another mod. Set it to true for your blocks; never clear it.
 
 ## A storage block with a menu
 
-**Status:** Works today. Its template must be a block that opens a menu, such as a chest.
+**Status:** Works today. This recipe uses a chest template for its menu-opening behaviour.
 
 **You get:** a crate with 9 slots, shown in vanilla's 3 × 3 dispenser menu. Hoppers can fill and empty it.
 
@@ -196,22 +201,16 @@ impl Hooks for Mod {
     fn register(&self, r: &mut dyn Registrar, _: &RegistrationContext) {
         let kind = r.block_entity_type("crate").blocks(&[CRATE]).build();
         r.block_entity_part(&kind, Crate).expect("native block entity type");
-    }
-
-    // The block's slots, and the vanilla menu that shows them.
-    fn block_entity_container(
-        &self,
-        _: &dyn Host,
-        event: &mut BlockEntityContainerEvent<'_>,
-    ) -> Option<ModContainer> {
-        (event.block == CRATE).then(|| ModContainer {
+        let block = r.block_key(CRATE);
+        // The block's slots, and the vanilla menu that shows them.
+        r.block_container(&block, ModContainer {
             slots: 9,
             // Slots each face reaches: down, up, north, south, west, east.
             faces: std::array::from_fn(|_| (0..9).collect()),
             inputs: (0..9).collect(),  // slots hoppers may put into
             outputs: (0..9).collect(), // slots hoppers may take from
             menu: Some("minecraft:generic_3x3".into()),
-        })
+        });
     }
 }
 ```
@@ -231,7 +230,7 @@ The slot count must match the menu's. Breaking the block drops its items, as a c
 
 More menu recipes: [Menus and screens](/docs/recipes-menus).
 
-**Status:** Partly. It works on Horizon clients. Other clients get nothing when they open it, and clicks are not predicted on the client yet.
+**Status:** Partly. It works on Sunrise clients with the same mod menu types. Other clients are not sent this menu.
 
 **You get:** a menu type of your own, and a screen you draw.
 
@@ -247,7 +246,7 @@ More menu recipes: [Menus and screens](/docs/recipes-menus).
 
 Then:
 
-1. Return `menu: Some("my_mod:press".into())` from `block_entity_container`, with `slots: 2`.
+1. Register a `ModContainer` through `r.block_container`, as above, with `menu: Some("my_mod:press".into())` and `slots: 2`.
 2. On the same Part, answer `screen` with the size of your screen and where each slot is drawn:
 
 ```rust
@@ -267,22 +266,22 @@ fn screen(&self, _: &dyn Host, _: &mut ScreenEvent<'_>) -> Option<Screen> {
 
 3. Draw on it with `screen_draw`, and turn clicks into buttons with `screen_click` and `menu_button`.
 
-The complete, working example is the machine in [horizon-machine-sample](https://github.com/arismoko/horizon-machine-sample) (`src/machine.rs`): a progress bar, a button and two slots. Rules for menu types: [Menu types](/docs/modding/how-to/content-mods#menu-types).
+Rules for menu types: [Menu types](/docs/modding/how-to/content-mods#menu-types).
 
 ## Sending a block entity's data to players
 
 **Status:** Works today.
 
-The saved compound stays on the server. To show something on the client (a level, a colour), answer `block_entity_update_tag` on the `BlockEntityPart` with the fields players should get. For a one-off effect, such as a burst of particles, see [One-shot client effects](/docs/modding/how-to/block-entities#one-shot-client-effects).
+The saved compound stays on the server. To show something on the client (a level, a colour), answer `block_entity_update_tag` on the `BlockEntityPart` with the fields players should get. For a one-off effect, such as a burst of particles, see [One-shot client effects](/docs/modding/how-to/world/machine-menu-data#one-shot-client-effects).
 
 ## Drawing a block entity
 
 **Status:** Partly. You can draw extra geometry for it; it is draw calls in Rust, not a Java-style renderer class.
 
-The `block_entity_submit` method of a `BlockEntityPart` draws each frame. For a block drawn only this way, set `"render_shape": "ENTITYBLOCK_ANIMATED"` in its JSON so the chunk doesn't draw its model too. See [Model drawing](/docs/modding/how-to/model-drawing).
+The `block_entity_submit` method of a `BlockEntityPart` draws each frame while the entity is within view distance and its bounds are in view. For a block drawn only this way, set `"properties": { "render_shape": "ENTITYBLOCK_ANIMATED" }` in its JSON so the chunk doesn't draw its model too. See [Model drawing](/docs/modding/how-to/client/model-drawing).
 
 ## Go deeper
 
-- Menu data, internal slots, retained handles: [Declaring a machine's menu data](/docs/modding/how-to/block-entities).
-- Items, fluids and energy for pipes and machines: [Capability providers](/docs/modding/concepts/trait-mods/capability-providers).
+- Menu data, internal slots, retained handles: [Declaring a machine's menu data](/docs/modding/how-to/world/machine-menu-data).
+- Items, fluids and energy for pipes and machines: [Capabilities](/docs/modding/concepts/capabilities).
 - Gaps: [API gaps: blocks](/api-gaps#blocks) and [GUI](/api-gaps#gui).

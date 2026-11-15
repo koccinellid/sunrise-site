@@ -4,14 +4,14 @@ Copy-paste drops: a block that drops itself, an ore with Fortune and Silk Touch,
 
 Loot tables are **vanilla 26.3 data pack files** in `data/my_mod/loot_table/`, inside your mod's folder and its one `.hmod`. The path gives the table's id: `data/my_mod/loot_table/blocks/ruby_block.json` is `my_mod:blocks/ruby_block`.
 
-> [!NOTE] Checked against `bfbda6a`
-> Every file format and API on this page was checked against the source of Ari's repository at commit `bfbda6a`.
+> [!NOTE] Checked against `de8b4e2`
+> Checked against the mod API at [arismoko/horizon `de8b4e2`](https://github.com/arismoko/horizon/tree/de8b4e2526df9d7f611515b78123a26a3914176f), which Sunrise merges. The three Rust examples below were compile-checked together against `horizon-mod-api`; they were not tried in game.
 
 ## How loot files work
 
 - A table has `pools`. Each pool rolls `rolls` times and picks from its `entries`.
 - In 26.3, a single condition is `condition` and a list of changes is `modifier`. Each one names its `type`.
-- A block's table is `<id>:blocks/<name>`, a mob's `<id>:entities/<name>`. The game finds them by that path.
+- For the custom blocks and mobs below, use `<id>:blocks/<name>` and `<id>:entities/<name>`. The game finds their tables by that path.
 
 > [!TIP] Start from a vanilla file
 > When in doubt, copy the vanilla table closest to what you want from the game's prepared data, and change it.
@@ -38,9 +38,9 @@ Loot tables are **vanilla 26.3 data pack files** in `data/my_mod/loot_table/`, i
 }
 ```
 
-This is what `cargo horizon-mod new` writes for its sample block.
+This follows the sample block table from `cargo horizon-mod new`, with the mod id and block name replaced.
 
-**Try it:** `cargo horizon-mod build`, start the game, place the block in survival and mine it.
+**Try it:** `cargo horizon-mod build`, install `target/horizon-mod/my_mod.hmod` in your game folder's `horizon-mods/`, start Sunrise, place the block in survival and mine it.
 
 **Common mistakes:**
 
@@ -155,11 +155,11 @@ A mob `my_mod:ghoul` drops from `data/my_mod/loot_table/entities/ghoul.json`. Th
 - `weight` is how likely an entry is against the others in its pool: bread here is three times as likely.
 - `rolls` can be a number or a range.
 
-**Try it:** `/loot give @s loot my_mod:chests/ruby_cache` puts one roll in your inventory.
+**Try it:** `/loot give @s loot my_mod:chests/ruby_cache` rolls the table once (including its 2 to 4 pool rolls) and gives you the items.
 
 ## Add to a vanilla table
 
-**Status:** Works today, with Rust code. A file for it is **not yet** read (see below).
+**Status:** Works today, with Rust code. Global loot modifier files are **not yet** applied (see below).
 
 **You get:** dungeon chests sometimes hold a ruby.
 
@@ -196,13 +196,13 @@ impl Hooks for Mod {
 **Try it:** build the code into a test instance (`horizon-launcher native-build . --instance Development --trust-native-code`), then `/loot give @s loot minecraft:chests/simple_dungeon` a few times.
 
 > [!NOTE] NeoForge's global loot modifiers
-> Files in `data/<ns>/loot_modifiers/` are **not yet** read: they are copied into the mod but nothing applies them ([#1270](https://github.com/arismoko/horizon/issues/1270)). **Workaround:** the `loot_table_load` hook above, or `loot_drops` to change the items as they drop. Details: [NeoForge data files](/docs/modding/reference/neoforge-data).
+> Files in `data/<ns>/loot_modifiers/` are **not yet** applied. **Workaround:** the `loot_table_load` hook above, or `loot_drops` to change the items as they drop. Details: [Custom loot functions and conditions](/docs/modding/how-to/items/loot-functions-and-conditions).
 
 ## A loot function of your own
 
 **Status:** Works today, with Rust code.
 
-**You get:** `my_mod:multiply`, a loot function that multiplies the count by its `factor`.
+**You get:** `my_mod:multiply`, a loot function that multiplies the count by its signed 32-bit `factor` (default 1), saturating on overflow.
 
 **In a loot table** (an entry's `modifier`):
 
@@ -217,6 +217,11 @@ impl Hooks for Mod {
 **File:** `src/lib.rs`
 
 ```rust
+use mod_api::*;
+
+#[derive(Default)]
+struct Mod;
+
 #[mod_api::horizon_mod]
 impl Hooks for Mod {
     // Every function `type` outside `minecraft:` comes here: check the kind.
@@ -225,8 +230,11 @@ impl Hooks for Mod {
             return;
         }
         // `event.data` is the function's JSON object.
-        let factor = event.data["factor"].as_i64().unwrap_or(1) as i32;
-        event.stack.count *= factor;
+        let factor = event.data["factor"]
+            .as_i64()
+            .and_then(|factor| i32::try_from(factor).ok())
+            .unwrap_or(1);
+        event.stack.count = event.stack.count.saturating_mul(factor);
     }
 }
 ```
@@ -239,7 +247,7 @@ impl Hooks for Mod {
 
 **Status:** Works today, with Rust code.
 
-**You get:** `my_mod:raining`, a condition that holds when it rains where the block broke or the mob died.
+**You get:** `my_mod:raining`, a condition that checks the captured level's rain flag for a block break or a mob death. It does not check local biome precipitation or shelter.
 
 **In a loot table** (a pool's or an entry's `condition`):
 
@@ -254,6 +262,11 @@ impl Hooks for Mod {
 **File:** `src/lib.rs`
 
 ```rust
+use mod_api::*;
+
+#[derive(Default)]
+struct Mod;
+
 #[mod_api::horizon_mod]
 impl Hooks for Mod {
     // `holds` starts false: set it for your own kind.
@@ -276,13 +289,13 @@ impl Hooks for Mod {
 
 - A function or condition type no mod answers: the function leaves the item as it is, and the condition fails.
 - A type without a namespace (`"type": "raining"`) means `minecraft:raining`, not yours.
-- Expecting every field of `event.ctx`: which ones are set depends on which part of the game rolls the table. Block drops have `tool` and `block`, but no `player` or `biome`. Always handle `None`.
+- Expecting every field of `event.ctx`: which ones are set depends on which part of the game rolls the table. Block drops supply `block` and an optional `tool`, but no `player` or `biome`. Always handle `None`.
 
-Both hooks also get `event.tags`, to check an item against a tag: see [Tags](/docs/recipes-tags#inside-a-loot-function). Details: [A mod's own loot functions and conditions](/docs/modding/how-to/native-mods/a-mods-own-loot-functions-and-conditions).
+These two server-side hooks get snapshots and `event.tags`, not a full Host, to check an item against a tag: see [Tags](/docs/recipes-tags#inside-a-loot-function). Details: [A mod's own loot functions and conditions](/docs/modding/how-to/items/loot-functions-and-conditions).
 
 ## What isn't here yet
 
-- **Global loot modifier files** (`loot_modifiers`). **Not yet** ([#1270](https://github.com/arismoko/horizon/issues/1270)). **Workaround:** `loot_table_load` or `loot_drops`, as above.
-- **A full, typed view of the loot context** for every kind of roll. **Partly:** the fields above are there, some only for some rolls ([#2647](https://github.com/arismoko/horizon/issues/2647)).
+- **Global loot modifier files** (`loot_modifiers`). **Not yet** applied. **Workaround:** `loot_table_load` or `loot_drops`, as above.
+- **Every context field populated for every kind of roll.** **Partly:** the typed fields above are there, some only for some rolls; always handle absent optional fields.
 - **Exploration maps from a custom function.** A function that asks for a map's structure search changes nothing in block and mob drops.
 - More gaps by area: [API gaps](/api-gaps).
