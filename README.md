@@ -36,7 +36,7 @@ app/                    the routes: /, /hub, /mods, /mods/<id>, /mods/submit, /m
                         server or the official Minecraft server (the link Kira DMs, or Discord sign-in; Kira's
                         appeal/* routes behind the same proxy; timeouts and quarantines are appealed on Discord)
 app/api/                the registry and players proxies, release view counts, and an account's registry
-                        submissions (/api/mod-submissions, read from sunrise-org/horizon-mods' pull requests for /mods/mine)
+                        submissions (/api/mod-submissions, read from sunrise-org/sunrise-mods' pull requests for /mods/mine)
 app/staff/api/          the staff dashboards' proxy to Kira's service
 app/data/               /data/roadmap.json and /data/journal.json, which Kira reads
 app/sitemap.ts, robots.ts, manifest.ts, opengraph-image.tsx, llms.txt/, og/docs/
@@ -59,7 +59,7 @@ The `/docs/api/*` pages come from `docs/api/` in the game's repository, read fro
   and links to that fork's contributor graph. Website-maker PR counts stay on `sunrise-org/horizon-site`.
   Both use the `hours` cache profile: after an hour, the next visit triggers a background refresh.
 - **Fresh within a minute**: every GitHub loader carries a cache tag (`components/github-fresh.ts`: the game's branch,
-  its issues and pull requests, its releases, horizon-mods' main). Kira gets GitHub's organization webhook and calls
+  its issues and pull requests, its releases, sunrise-mods' main). Kira gets GitHub's organization webhook and calls
   `POST /api/revalidate` (`Authorization: Bearer $REVALIDATE_SECRET`, body `{"tags": [...]}`) for what changed; the
   tagged data expires at once and Kira loads the main pages again. Files of a branch are read at its current
   commit (`rawGameUrl`), because raw.githubusercontent.com keeps a branch's files for five minutes. Without the call,
@@ -69,7 +69,7 @@ The `/docs/api/*` pages come from `docs/api/` in the game's repository, read fro
 - **The game's branch**: `GAME_REPO` (`sunrise-org/horizon`) at `GAME_REF` (`release/sunrise`), both in
   `components/game-repo.ts` and overridable by the environment: `README.md` (parity numbers), `roadmap/roadmap.json` (the hub),
   `docs/api/*.md`, `docs/telemetry.md` and `LICENSE`. A file missing on that branch shows the page's fallback, never a build error.
-- **The mod registry**: the index at sunrise-org.github.io/horizon-mods, ratings and submissions through
+- **The mod registry**: the index at sunrise-org.github.io/sunrise-mods, ratings and submissions through
   `REGISTRY_UPSTREAM`.
 - **The official server's market**: `/hub/market` reads Kira's `/smp/market.json` (the page the SMP mod writes on the server, read by Kira once a minute) through `/api/market`.
 - **Telemetry**: the Players page reads `telemetry.playsunrise.net` (or `TELEMETRY_URL`) through this site's server.

@@ -51,7 +51,7 @@ export type ModSummary = {
 export type Rating = { average: number; count: number };
 export type Ratings = Record<string, Rating>;
 
-export const REGISTRY = "https://github.com/sunrise-org/horizon-mods";
+export const REGISTRY = "https://github.com/sunrise-org/sunrise-mods";
 export const OFFICIAL_MODS = "https://playsunrise.net/mods";
 export const SUBMIT_URL = "/mods/submit";
 export const POLICY_URL = "/mods/policy";
@@ -189,7 +189,7 @@ const SLUG = /^[a-z0-9][a-z0-9-]{0,23}$/;
 export const categoriesOf = (p: ModProject) => strings(p.categories).filter((c) => CATEGORIES[p.kind]?.includes(c));
 export const tagsOf = (p: ModProject) => strings(p.tags).filter((t) => SLUG.test(t));
 /** Its screenshots, only from the registry's own Pages site (where it mirrors every image). */
-export const screenshotsOf = (p: ModProject) => strings(p.screenshots).filter((u) => u.startsWith("https://sunrise-org.github.io/horizon-mods/"));
+export const screenshotsOf = (p: ModProject) => strings(p.screenshots).filter((u) => u.startsWith("https://sunrise-org.github.io/sunrise-mods/"));
 
 export const fileSize = (bytes: number) => (bytes >= 1 << 20 ? `${(bytes / (1 << 20)).toFixed(1)} MB` : `${Math.max(1, Math.round(bytes / 1024))} KB`);
 

@@ -9,12 +9,12 @@ export const TAGS = {
   main: `github:${GAME_REPO}:${GAME_REF}`, // files on the game's branch (roadmap.json, docs/api, README), site-maker PR counts
   issues: `github:${GAME_REPO}:issues`, // the game's issues and pull requests (the hub, the journal)
   releases: `github:${GAME_REPO}:releases`, // the game's releases
-  mods: "github:sunrise-org/horizon-mods:main", // horizon-mods' main (the mod policy, the registry index it publishes)
+  mods: "github:sunrise-org/sunrise-mods:main", // sunrise-mods' main (the mod policy, the registry index it publishes)
   apiGaps: "github:arismoko-horizon:main", // arismoko/horizon's contributors, main and issues (/api-gaps)
 } as const;
 export const REVALIDATE_TAGS: readonly string[] = Object.values(TAGS);
 
-const tagOf = (repo: string) => (repo === "sunrise-org/horizon-mods" ? TAGS.mods : repo === "arismoko/horizon" ? TAGS.apiGaps : TAGS.main);
+const tagOf = (repo: string) => (repo === "sunrise-org/sunrise-mods" ? TAGS.mods : repo === "arismoko/horizon" ? TAGS.apiGaps : TAGS.main);
 
 // The commit a repository's branch points at. raw.githubusercontent.com caches a branch's files for five minutes, so
 // files are read at this commit instead: once Kira revalidates the tag, the next read gets the files just pushed.
