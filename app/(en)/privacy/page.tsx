@@ -136,10 +136,10 @@ export default function PrivacyPage() {
             Ask what this site holds about you, or have it deleted, by opening
             an issue on{" "}
             <a
-              href="https://github.com/sunrise-org/horizon-site/issues"
+              href="https://github.com/sunrise-org/sunrise-site/issues"
               className={LINK}
             >
-              sunrise-org/horizon-site
+              sunrise-org/sunrise-site
             </a>
             . Because only hashes of addresses are kept, include the IP address
             you used so the entry can be found.

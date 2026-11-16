@@ -110,7 +110,7 @@ const FALLBACK_NIGHTLY: Nightly = {
   date: "2026-11-01",
   build: "c9d474d",
   published: "2026-11-01T19:09:04Z",
-  url: "https://github.com/sunrise-org/horizon/releases/tag/nightly",
+  url: "https://github.com/sunrise-org/sunrise/releases/tag/nightly",
   changes: [
     { section: "New", text: "Native mods can open custom menus" },
     { section: "New", text: "OptiFine entity models: packs' .jem files reshape mobs" },
@@ -119,7 +119,7 @@ const FALLBACK_NIGHTLY: Nightly = {
   total: 3,
 };
 
-const RELEASES = "https://github.com/sunrise-org/horizon/releases/tag/";
+const RELEASES = "https://github.com/sunrise-org/sunrise/releases/tag/";
 
 export const FALLBACK: LauncherData = {
   launcherVersion: "0.2.37",
@@ -133,7 +133,7 @@ export const FALLBACK: LauncherData = {
     {
       version: "0.2.37",
       published: "2026-11-02T08:25:07Z",
-      url: "https://github.com/sunrise-org/horizon/releases/tag/launcher%400.2.37",
+      url: "https://github.com/sunrise-org/sunrise/releases/tag/launcher%400.2.37",
       items: [
         "Native mod builds: no space in the Windows build folder",
         "Native builds: a dev profile for mod developers",

@@ -24,7 +24,7 @@ test("the github.com search keeps the same query", () => {
 });
 
 test("rows name their owner and repo and carry the draft flag, capped at the limit, with the full count", () => {
-  const body = { total_count: 30, items: [item(1), item(2, { draft: true }), item(3, { repository_url: "https://api.github.com/repos/sunrise-org/horizon" })] };
+  const body = { total_count: 30, items: [item(1), item(2, { draft: true }), item(3, { repository_url: "https://api.github.com/repos/sunrise-org/sunrise" })] };
   const { total, pulls } = parseTeamPulls(body, 2);
   assert.equal(total, 30);
   assert.deepEqual(pulls.map((p) => [p.repo, p.number, p.draft, p.author]), [

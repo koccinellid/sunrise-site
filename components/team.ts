@@ -15,7 +15,7 @@ export const TEAM: readonly TeamMember[] = [
 
 // The people who make this site, shown apart from the game's contributors.
 export const SITE_MAKERS = ["Xmilon", "UMCEKO"] as const;
-export const SITE_REPO = "sunrise-org/horizon-site";
+export const SITE_REPO = "sunrise-org/sunrise-site";
 // Made the Horizon site this one grew out of.
 export const ORIGINAL_SITE_MAKER = { name: "Anthony S", avatar: "https://cdn.playsunrise.net/site/media/anthony-s.webp", url: "https://dezerx.com" };
 

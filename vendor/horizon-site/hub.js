@@ -8,8 +8,8 @@ import { parts, plainItem, sections } from "./releases.js";
 import { isGame, isLauncher, isNightly } from "./versions.js";
 import { avatar } from "./contributors.js";
 
-export const REPO = process.env.GAME_REPO?.trim() || "sunrise-org/horizon";
-const REF = process.env.GAME_REF?.trim() || "release/sunrise";
+export const REPO = process.env.GAME_REPO?.trim() || "sunrise-org/sunrise";
+const REF = process.env.GAME_REF?.trim() || "main";
 const issueUrl = (n) => `https://github.com/${REPO}/issues/${n}`;
 const fileUrl = (path) => `https://github.com/${REPO}/blob/${REF}/${path}`;
 
