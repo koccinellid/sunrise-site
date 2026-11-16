@@ -11,7 +11,7 @@ export const metadata = pageMetadata({
   path: "/mods/policy",
 });
 
-const SOURCE = "https://github.com/sunrise-org/horizon-mods/blob/main/MOD-POLICY.md";
+const SOURCE = "https://github.com/sunrise-org/sunrise-mods/blob/main/MOD-POLICY.md";
 const LINK = "text-[#ffd2e4] underline decoration-[#ffd2e4]/40 underline-offset-4 transition-colors hover:text-white";
 
 export default async function PolicyPage() {
@@ -41,7 +41,7 @@ export default async function PolicyPage() {
           MOD-POLICY.md
         </a>
         . To ask for a takedown:{" "}
-        <a href="https://github.com/sunrise-org/horizon-mods/issues/new?template=takedown.yml" className={LINK}>
+        <a href="https://github.com/sunrise-org/sunrise-mods/issues/new?template=takedown.yml" className={LINK}>
           the takedown form
         </a>
         , or privately through{" "}

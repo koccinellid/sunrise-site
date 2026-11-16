@@ -69,7 +69,7 @@ Open [playsunrise.net/mods/submit](/mods/submit) and sign in with GitHub. The pa
 - **Its page:** the name, a one-line summary, a description in Markdown, the authors, the licence, the source address and, optionally, a square PNG icon of at most 256 KiB.
 - **Signature:** your public key, for a new project, and the file's `.minisig`.
 
-Press **Submit for review**. It checks the file again and opens a pull request in [sunrise-org/horizon-mods](https://github.com/sunrise-org/horizon-mods) that adds `mods/<id>.toml`, with you as the project's owner. The repository's checks run `cargo horizon-mod check` again and post the report.
+Press **Submit for review**. It checks the file again and opens a pull request in [sunrise-org/sunrise-mods](https://github.com/sunrise-org/sunrise-mods) that adds `mods/<id>.toml`, with you as the project's owner. The repository's checks run `cargo horizon-mod check` again and post the report.
 
 ## Step 4: Review
 
@@ -78,7 +78,7 @@ Press **Submit for review**. It checks the file again and opens a pull request i
 - If the file must change, submit a new version from the form.
 - Code is read line by line, since it runs with the player's rights. Say in the description what the mod does and what it doesn't.
 
-When the pull request is merged, the file becomes a release of horizon-mods within minutes. Your project gets a page at `playsunrise.net/mods/<id>` with its source, licence and SHA-256, and shows in the launcher.
+When the pull request is merged, the file becomes a release of sunrise-mods within minutes. Your project gets a page at `playsunrise.net/mods/<id>` with its source, licence and SHA-256, and shows in the launcher.
 
 ## Updates
 
@@ -86,7 +86,7 @@ When the pull request is merged, the file becomes a release of horizon-mods with
 - The project's owners publish updates of a mod with data only without another review. Every version of a mod with code is read again.
 - If the project has a key, the new file must be signed with it.
 
-Without the form, you can open the pull request by hand: the [horizon-mods README](https://github.com/sunrise-org/horizon-mods) says how. The registry's file formats are in [the mod index reference](/docs/api/mod-index).
+Without the form, you can open the pull request by hand: the [sunrise-mods README](https://github.com/sunrise-org/sunrise-mods) says how. The registry's file formats are in [the mod index reference](/docs/api/mod-index).
 
 ## Reports and takedowns
 

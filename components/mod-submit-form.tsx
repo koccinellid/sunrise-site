@@ -19,8 +19,8 @@ import { AREA, CARD, Field, GHOST_SM, INPUT, LINK, PRIMARY, SECONDARY_SM } from 
 import { zipKind } from "@/components/zip-kind";
 
 const API = "/api/mods";
-const REGISTRY = "https://github.com/sunrise-org/horizon-mods";
-const INDEX = "https://sunrise-org.github.io/horizon-mods/index.json";
+const REGISTRY = "https://github.com/sunrise-org/sunrise-mods";
+const INDEX = "https://sunrise-org.github.io/sunrise-mods/index.json";
 const MAX_FILE = 64 << 20;
 // Each extension and the kinds it can be. A .zip is one of three: the form reads its folders, or asks.
 const EXTENSIONS: Record<string, string[]> = {

@@ -3,7 +3,7 @@ import { githubFetch } from "@/components/github-api";
 import { rawMainUrl, TAGS } from "@/components/github-fresh";
 import { KINDS, type ModProject, type Ratings } from "@/components/mods-logic";
 
-const INDEX_URL = "https://sunrise-org.github.io/horizon-mods/index.json";
+const INDEX_URL = "https://sunrise-org.github.io/sunrise-mods/index.json";
 function ratingsUrl() {
   const upstream = process.env.REGISTRY_UPSTREAM;
   if (!upstream) return "https://playsunrise.net/api/mods/ratings";
@@ -80,7 +80,7 @@ export async function getSubmissions(login: string): Promise<Submission[] | null
   "use cache";
   cacheTag(TAGS.mods);
   const marker = `<!-- submitted-by: ${login.toLowerCase()} -->`;
-  const query = `repo:sunrise-org/horizon-mods is:pr in:body "submitted-by: ${login}"`;
+  const query = `repo:sunrise-org/sunrise-mods is:pr in:body "submitted-by: ${login}"`;
   try {
     const res = await githubFetch(`/search/issues?q=${encodeURIComponent(query)}&sort=created&order=desc&per_page=50`);
     if (!res.ok) throw new Error(`GitHub responded ${res.status} ${res.statusText}`);
@@ -109,7 +109,7 @@ export async function getModPolicy(): Promise<string | null> {
   "use cache";
   cacheTag(TAGS.mods);
   try {
-    const res = await fetch(await rawMainUrl("sunrise-org/horizon-mods", "MOD-POLICY.md"), { signal: AbortSignal.timeout(15_000) });
+    const res = await fetch(await rawMainUrl("sunrise-org/sunrise-mods", "MOD-POLICY.md"), { signal: AbortSignal.timeout(15_000) });
     if (!res.ok) throw new Error(`GitHub responded ${res.status} ${res.statusText}`);
     const text = await res.text();
     cacheLife({ stale: 900, revalidate: 3600, expire: 86400 });
