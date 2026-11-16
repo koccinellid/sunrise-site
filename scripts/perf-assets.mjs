@@ -36,7 +36,7 @@ if (command === "import") {
   await mkdir(dirname(manifestPath), { recursive: true });
   await writeFile(join(root, "vendor/perf/source.patch"), patch);
   files["vendor/perf/source.patch"] = hash(patch);
-  await writeFile(manifestPath, JSON.stringify({ repository: "https://github.com/sunrise-org/horizon", revision, files }, null, 2) + "\n");
+  await writeFile(manifestPath, JSON.stringify({ repository: "https://github.com/sunrise-org/sunrise", revision, files }, null, 2) + "\n");
   console.log(`Imported perf reader from Horizon ${revision}.`);
 } else if (command === "verify") {
   const manifest = JSON.parse(await readFile(manifestPath, "utf8"));

@@ -1,5 +1,5 @@
 {
-  "repository": "https://github.com/sunrise-org/horizon",
+  "repository": "https://github.com/sunrise-org/sunrise",
   "revision": "e3fbf94bbd331d48fa4a5c39b456f378fde495fd",
   "files": {
     "public/perf/horizon_perf.wasm": "6a9f3d9e1a3b0a112552b691470950fdc2b57ae5bdc9c938ed4f0406ad36133c",
