@@ -35,7 +35,7 @@ export function fitDescription(text: string, max = 160) {
   return `${clean.slice(0, max - 1).replace(/[\s,;:]+\S*$/, "")}…`;
 }
 
-export const OG_IMAGE = { url: "/opengraph-image", width: 1200, height: 630, alt: "Sunrise: Minecraft: Java Edition 26.3, rebuilt in Rust" };
+export const OG_IMAGE = { url: "/opengraph-image?v=2", width: 1200, height: 630, alt: "Sunrise: Minecraft: Java Edition 26.3, rebuilt in Rust" };
 
 type PageSeo = {
   title: string;

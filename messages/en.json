@@ -2,7 +2,7 @@
   "languageName": "English",
   "meta": {
     "title": "Sunrise: Minecraft Rust Edition, Java 26.3 rewritten in Rust",
-    "description": "Minecraft: Java Edition 26.3 rewritten in Rust. Free, open source and tested against vanilla. Get the Sunrise launcher for Windows, macOS and Linux."
+    "description": "Minecraft: Java Edition 26.3 rewritten in Rust. Free, open source and tested against vanilla. Follow its progress and build mods; the launcher is coming."
   },
   "common": {
     "newTab": "(opens in a new tab)"

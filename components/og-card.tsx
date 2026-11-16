@@ -6,7 +6,7 @@ import { SITE_HOST } from "@/components/site";
 
 const OG_WIDTH = 1200;
 const OG_HEIGHT = 630;
-const DEFAULT_FOOTER = "Free and open source · Windows, macOS and Linux";
+const DEFAULT_FOOTER = "Free and open source · Launcher coming soon";
 const MAX_ICON_BYTES = 512 * 1024;
 const ALLOWED_ICON_HOSTS = new Set([
   "sunrise-org.github.io",
